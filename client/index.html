@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Add Elements</title>
+
+
+<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+<body>
+    <button id="addButton">Add Train</button>
+    <div id="elementContainer"></div>
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <span class="close" id="closePopup">&times;</span>
+            <h2>Enter a Number (1-9999)</h2>
+            <input type="text" id="popupInput" readonly>
+            <div id="popupKeypad">
+                <button class="popup-key">1</button>
+                <button class="popup-key">2</button>
+                <button class="popup-key">3</button>
+                <button class="popup-key">4</button>
+                <button class="popup-key">5</button>
+                <button class="popup-key">6</button>
+                <button class="popup-key">7</button>
+                <button class="popup-key">8</button>
+                <button class="popup-key">9</button>
+                <button class="popup-key">0</button>
+                <button id="clearPopup" class="popup-key">C</button>
+                <button id="confirmButton" class="popup-key">OK</button>
+            </div>
+        </div>
+    </div>
+    <!-- Template for the element with a slider and a jQuery Mobile flip switch -->
+<template id="elementTemplate">
+    <div class="element">
+        <span class="element-number"></span>
+        <div class="element-slider-container">
+            <input type="range" class="element-slider" min="0" max="100" value="0">
+            <span class="slider-value">0</span>
+        </div>
+
+        <select name="element-switch" id="element-switch" data-role="flipswitch">
+            <option value="reverse">Rev</option>
+            <option value="forward" selected>Fwd</option>
+        </select>
+
+        <div class="on-off-buttons">
+            <button class="on-button" id="f1">F1</button>
+            <button class="on-button" id="f2">F2</button>
+            <button class="on-button" id="f3">F3</button>
+            <button class="on-button" id="f4">F4</button>
+        </div>
+    </div>
+</template>
+
+
+
+    <script src="script.js"></script>
+</body>
+</html>
