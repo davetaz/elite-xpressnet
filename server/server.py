@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 import time
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for the entire application
 
 # Configuration: Set this flag to True to use the mock controller for development.
 USE_MOCK_CONTROLLER = True
