@@ -49,31 +49,38 @@ function createSliderElement(number) {
     const slider = clone.querySelector(".element-slider");
     const sliderValue = clone.querySelector(".slider-value");
 
+    let sliderInputTimer = null; // Timer to debounce slider input events
+
+    // Add an event listener to the slider's input event to update the server when the slider moves
     slider.addEventListener("input", () => {
-        if (direction == "forward") {
-            direction = 1;
-        } else if (direction == "reverse") {
-            direction = 0;
+        // Clear the previous timer if it exists
+        if (sliderInputTimer) {
+            clearTimeout(sliderInputTimer);
         }
-        const speed = parseInt(slider.value, 10);
-        sliderValue.textContent = slider.value;
-        console.log(JSON.stringify({ direction, speed }))
-        // Update the server by making a POST request
-        fetch(`http://localhost:8080/train/${number}/throttle`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ direction, speed }),
-        })
-        .then((response) => response.json())
-            .then((data) => {
-                // Handle the response if needed
-                console.log("Server response:", data);
+
+        // Set a new timer to execute the fetch after 100ms
+        sliderInputTimer = setTimeout(() => {
+            const direction = $(flipSwitch).val() === "forward" ? 1 : 0;
+            const speed = parseInt(slider.value, 10);
+            sliderValue.textContent = speed;
+            console.log(JSON.stringify({ direction, speed }));
+            // Update the server by making a POST request
+            fetch(`http://127.0.0.1:8080/train/${number}/throttle`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ direction, speed }),
             })
-        .catch((error) => {
-           console.error("Error updating server:", error);
-        });
+                .then((response) => response.json())
+                .then((data) => {
+                    // Handle the response if needed
+                    console.log("Server response:", data);
+                })
+                .catch((error) => {
+                    console.error("Error updating server:", error);
+                });
+        }, 100); // Execute the fetch after 100ms of no slider input events
     });
 
     // Set up the jQuery Mobile flip switch
