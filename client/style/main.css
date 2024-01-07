@@ -9,7 +9,6 @@ button {
 .container {
     width: 370px;
     height: 600px;
-    overflow-y: scroll;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
@@ -30,7 +29,7 @@ button {
 @media screen and (min-width: 769px) {
     #trainContainer {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         margin-left: 20px;
     }
 }
