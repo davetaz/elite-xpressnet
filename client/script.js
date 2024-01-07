@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const popup = document.getElementById("popup");
     const closePopup = document.getElementById("closePopup");
     const popupInput = document.getElementById("popupInput");
-    const elementContainer = document.getElementById("elementContainer");
+    const trainContainer = document.getElementById("trainContainer");
 
     addButton.addEventListener("click", () => {
         popup.style.display = "block";
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
             } else if (key.id === "confirmButton") {
                 const number = Number(popupInput.value);
                 if (number >= 1 && number <= 9999) {
-                    createSliderElement(number);
+                    createTrain(number);
                     popup.style.display = "none";
                     popupInput.value = "";
                 } else {
@@ -34,20 +34,20 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
-    // Function to create a new element with a slider, flip switch, and on/off buttons
-function createSliderElement(number) {
-    const elementTemplate = document.getElementById("elementTemplate");
-    const clone = document.importNode(elementTemplate.content, true);
-    const elementContainer = document.getElementById("elementContainer");
+    // Function to create a new train with a slider, flip switch, and on/off buttons
+function createTrain(number) {
+    const trainTemplate = document.getElementById("trainTemplate");
+    const clone = document.importNode(trainTemplate.content, true);
+    const trainContainer = document.getElementById("trainContainer");
     let direction = 1;
 
-    // Set the element number
-    const elementNumber = clone.querySelector(".element-number");
-    elementNumber.textContent = number;
+    // Set the train number
+    const trainNumber = clone.querySelector(".train-number");
+    trainNumber.textContent = number;
 
     // Set up the slider and its value display
-    const slider = clone.querySelector(".element-slider");
-    const sliderValue = clone.querySelector(".slider-value");
+    const slider = clone.querySelector(".throttle");
+    const sliderValue = clone.querySelector(".throttle-value");
 
     let sliderInputTimer = null; // Timer to debounce slider input events
 
@@ -60,7 +60,8 @@ function createSliderElement(number) {
 
         // Set a new timer to execute the fetch after 100ms
         sliderInputTimer = setTimeout(() => {
-            const direction = $(flipSwitch).val() === "forward" ? 1 : 0;
+            //const direction = $(flipSwitch).val() === "forward" ? 1 : 0;
+            const direction = 1;
             const speed = parseInt(slider.value, 10);
             sliderValue.textContent = speed;
             console.log(JSON.stringify({ direction, speed }));
@@ -82,29 +83,26 @@ function createSliderElement(number) {
                 });
         }, 100); // Execute the fetch after 100ms of no slider input events
     });
-
+/*
     // Set up the jQuery Mobile flip switch
-    const flipSwitch = clone.querySelector("#element-switch");
-
-    // Initialize the flip switch as a slider
-    $(flipSwitch).slider();
+    const flipSwitch = clone.querySelector("#direction-switch");
 
     // Handle flip switch change event
     $(flipSwitch).on("change", function() {
         console.log($(this).val());
         direction = $(this).val();
     });
-
+*/
     // Set up the on/off buttons
-    const onButtons = clone.querySelectorAll(".on-button");
+    const onButtons = clone.querySelectorAll(".function-buttons button");
     onButtons.forEach((button) => {
         button.addEventListener("click", () => {
             button.classList.toggle("active");
         });
     });
 
-    // Append the new element to the container
-    elementContainer.appendChild(clone);
+    // Append the new train to the container
+    trainContainer.appendChild(clone);
 }
 
 

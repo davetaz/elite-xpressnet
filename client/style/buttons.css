@@ -1,0 +1,50 @@
+button {
+    padding: 10px 10px;
+}
+.function-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Two columns with equal width */
+}
+/* Style for the on/off buttons */
+.function-buttons button {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    flex: 1; /* Each button covers 50% of the container width */
+    text-align: center; /* Optional: Center-align the button content */
+    width: 80px;
+    height: 80px;
+}
+
+.function-buttons button name {
+    font-size: 0.7em;
+}
+/* Style for the active (pressed/on) buttons */
+.function-buttons button.active {
+    background-color: #007bff; /* Change to your desired active button color */
+    color: #fff; /* Change to your desired active button text color */
+}
+
+/* Style for the active (pressed/on) buttons */
+.direction-buttons button.active {
+    background-color: #007bff; /* Change to your desired active button color */
+    color: #fff; /* Change to your desired active button text color */
+}
+.direction-buttons {
+    display: flex; /* Make it a flex container */
+    width: 100%; /* 100% wide */
+}
+
+.direction-buttons button {
+    flex: 1; /* Each button covers 50% of the container width */
+    text-align: center; /* Optional: Center-align the button content */
+}
+.stop-button {
+    display: flex;
+    width: 100%;
+}
+.stop-button button {
+    flex: 1; /* Each button covers 50% of the container width */
+    text-align: center; /* Optional: Center-align the button content */
+}

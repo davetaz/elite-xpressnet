@@ -1,0 +1,59 @@
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+#trainContainer {
+    margin-top: 20px;
+}
+
+.train {
+    display: inline-block;
+    margin: 5px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    min-width: 328px;
+}
+
+.train-image {
+    max-width: 328px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+}
+
+.train-image img {
+    max-height: 100%;
+    vertical-align: middle;
+}
+.train-address {
+    color: grey;
+    text-transform: uppercase;
+    font-size: 0.7em;
+}
+.train-name {
+    font-size: 1.5em;
+    margin-top: 10px;
+    margin-bottom: 0px;
+}
+
+#display {
+    background-color: #f0f0f0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 150px;
+    text-align: right;
+    margin-bottom: 10px;
+}
+.train-control {
+    display: flex;
+    width: 100%;
+}
+.train-control panel {
+    flex: 1;
+    max-width: 166px;
+}
