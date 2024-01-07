@@ -1,6 +1,38 @@
+body {
+    width: 100%;
+    max-width: 100%;
+}
 button {
     padding: 10px 20px;
     font-size: 16px;
+}
+.container {
+    width: 370px;
+    height: 600px;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+/* Media query for screens with a maximum width of 768px (mobile devices) */
+@media screen and (max-width: 768px) {
+    #trainContainer {
+        display: block; /* Change to a block layout for mobile */
+    }
+
+    .container {
+        width: 100%; /* Full screen width for mobile */
+        height: auto; /* Allow the height to adjust to content */
+        margin-bottom: 10px; /* Optional: Add margin between containers */
+    }
+}
+
+/* Media query for screens with a minimum width of 769px (desktop and iPad) */
+@media screen and (min-width: 769px) {
+    #trainContainer {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        margin-left: 20px;
+    }
 }
 
 #trainContainer {
@@ -9,20 +41,23 @@ button {
 
 .train {
     display: inline-block;
-    margin: 5px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    min-width: 328px;
+    width: 100%;
+    overflow-y: hidden;
 }
 
 .train-image {
-    max-width: 328px;
     min-height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: white;
+}
+.train-details {
+    margin: 10px;
+    max-width: ;
+}
+.train-control {
+    margin: 10px;
 }
 
 .train-image img {
@@ -51,9 +86,12 @@ button {
 }
 .train-control {
     display: flex;
-    width: 100%;
 }
 .train-control panel {
     flex: 1;
-    max-width: 166px;
+}
+.throttle-value {
+    font-size: 2em;
+    top: -10px;
+    position: relative;
 }

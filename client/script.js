@@ -5,6 +5,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const popupInput = document.getElementById("popupInput");
     const trainContainer = document.getElementById("trainContainer");
 
+    const addTrainButtons = document.querySelectorAll(".add-train-button");
+    addTrainButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const container = button.parentElement; // Get the container of the clicked button
+            const trainNumber = Number(prompt("Enter a train number (1-9999):"));
+
+            if (trainNumber >= 1 && trainNumber <= 9999) {
+                createTrain(container, trainNumber);
+            } else {
+                alert("Please enter a number between 1 and 9999.");
+            }
+        });
+    });
+
+    /*
     addButton.addEventListener("click", () => {
         popup.style.display = "block";
     });
@@ -34,11 +49,13 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+    */
     // Function to create a new train with a slider, flip switch, and on/off buttons
-function createTrain(number) {
+function createTrain(container, number) {
+    container.innerHTML = "";
     const trainTemplate = document.getElementById("trainTemplate");
     const clone = document.importNode(trainTemplate.content, true);
-    const trainContainer = document.getElementById("trainContainer");
+    const trainContainer = container;
     let direction = 1;
 
     // Set the train number
@@ -83,17 +100,7 @@ function createTrain(number) {
                 });
         }, 100); // Execute the fetch after 100ms of no slider input events
     });
-/*
-    // Set up the jQuery Mobile flip switch
-    const flipSwitch = clone.querySelector("#direction-switch");
 
-    // Handle flip switch change event
-    $(flipSwitch).on("change", function() {
-        console.log($(this).val());
-        direction = $(this).val();
-    });
-*/
-    // Set up the on/off buttons
     const onButtons = clone.querySelectorAll(".function-buttons button");
     onButtons.forEach((button) => {
         button.addEventListener("click", () => {

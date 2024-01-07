@@ -17,8 +17,21 @@
         <link rel="stylesheet" href="style/popup.css">
     </head>
 <body>
-    <button id="addButton">Add Train</button>
-    <div id="trainContainer"></div>
+    <div id="trainContainer" class="containers">
+        <div id="container1" class="container">
+            <button class="add-train-button">Add Train</button>
+        </div>
+        <div id="container2" class="container">
+            <button class="add-train-button">Add Train</button>
+        </div>
+        <div id="container3" class="container">
+            <button class="add-train-button">Add Train</button>
+        </div>
+        <div id="container4" class="container">
+            <button class="add-train-button">Add Train</button>
+        </div>
+    </div>
+
     <div id="popup" class="popup">
         <div class="popup-content">
             <span class="close" id="closePopup">&times;</span>
@@ -41,12 +54,13 @@
         </div>
     </div>
 
+
 <template id="trainTemplate">
     <div class="train">
+        <div class="train-image">
+            <img src="images/Class66.jpg"/>
+        </div>
         <section class="train-details">
-            <div class="train-image">
-                <img src="images/Class66.jpg"/>
-            </div>
             <h1 class="train-name">
                 EWS Class #66
             </h1>
@@ -71,27 +85,22 @@
                 </div>
             </panel>
             <panel class="function-panel">
-                <div class="function-buttons">
-                    <div class="function-buttons">
-                        <button id="f0">
-                            <img src="icon1.png" alt="Icon 1">
-                            <name>Directional lights</name>
-                        </button>
-                        <button id="f1">
-                            <img src="icon2.png" alt="Icon 2">
-                            <name>Interior lights</name>
-                        </button>
-                        <button id="f2">
-                            <img src="icon3.png" alt="Icon 3">
-                            <name>Function #3</name>
-                        </button>
-                        <button id="f3">
-                            <img src="icon4.png" alt="Icon 4">
-                            <name>Function #4</name>
-                        </button>
-                    </div>
-
-                </div>
+                <button id="f0">
+                    <img src="images/function-icons/Directional_lights.png" alt="Icon 1">
+                    <name>Directional lights</name>
+                </button>
+                <button id="f1">
+                    <img src="images/function-icons/Interior_lights.png" alt="Icon 2">
+                    <name>Interior lights</name>
+                </button>
+                <button id="f2">
+                    <img src="images/function-icons/Function.png" alt="Icon 3">
+                    <name>Function #3</name>
+                </button>
+                <button id="f3">
+                    <img src="images/function-icons/Function.png" alt="Icon 4">
+                    <name>Function #4</name>
+                </button>
             </panel>
         </section>
     </div>
