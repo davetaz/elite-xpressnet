@@ -51,6 +51,10 @@ function createTrain(container, number) {
 
     let sliderInputTimer = null; // Timer to debounce slider input events
 
+    // Add event listeners for the direction buttons
+    const reverseButton = clone.querySelector("#reverse");
+    const forwardButton = clone.querySelector("#forward");
+
     // Add an event listener to the slider's input event to update the server when the slider moves
     slider.addEventListener("input", () => {
         // Clear the previous timer if it exists
@@ -60,8 +64,7 @@ function createTrain(container, number) {
 
         // Set a new timer to execute the fetch after 100ms
         sliderInputTimer = setTimeout(() => {
-            // const direction = $(flipSwitch).val() === "forward" ? 1 : 0;
-            const direction = 1;
+            const direction = forwardButton.classList.contains("active") ? 1 : 0; // Determine the current direction
             const speed = parseInt(slider.value, 10);
             sliderValue.textContent = speed;
             console.log(JSON.stringify({ direction, speed }));
@@ -74,10 +77,6 @@ function createTrain(container, number) {
                 });
         }, 100); // Execute the fetch after 100ms of no slider input events
     });
-
-    // Add event listeners for the direction buttons
-    const reverseButton = clone.querySelector("#reverse");
-    const forwardButton = clone.querySelector("#forward");
 
     reverseButton.addEventListener("click", () => {
         // Set the clicked button as active and the other as inactive
