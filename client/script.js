@@ -34,12 +34,31 @@ function setThrottleSpeed(trainNumber, speed, direction) {
     });
 }
 
+// Function to set the function state
+function setFunctionState(trainNumber, functionNumber, state) {
+    // Make a PUT request to update the function state
+    fetch(`http://127.0.0.1:8080/train/${trainNumber}/function/${functionNumber}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ "switch": state }),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        // Handle the response if needed
+        console.log("Function state updated:", data);
+    })
+    .catch((error) => {
+        console.error("Error updating function state:", error);
+    });
+}
+
 function createTrain(container, number) {
     container.innerHTML = "";
     const trainTemplate = document.getElementById("trainTemplate");
     const clone = document.importNode(trainTemplate.content, true);
     const trainContainer = container;
-    let direction = 1;
 
     // Set the train number
     const trainNumber = clone.querySelector(".train-number");
@@ -133,12 +152,21 @@ function createTrain(container, number) {
             });
     });
 
-    const onButtons = clone.querySelectorAll(".function-buttons button");
-    onButtons.forEach((button) => {
+    const functionButtons = clone.querySelectorAll(".function-button");
+    functionButtons.forEach((button) => {
         button.addEventListener("click", () => {
+            console.log('hello');
             button.classList.toggle("active");
+
+            const functionNumber = parseInt(button.id.replace("f", ""), 10);
+            // Determine the state based on the presence of the 'active' class
+            const state = button.classList.contains("active") ? 1 : 0;
+
+            // Call setFunctionState to update the function state
+            setFunctionState(number, functionNumber, state);
         });
     });
+
 
     // Append the new train to the container
     trainContainer.appendChild(clone);

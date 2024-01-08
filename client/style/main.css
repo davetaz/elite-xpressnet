@@ -1,21 +1,43 @@
 body {
     width: 100%;
     max-width: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+nav {
+    width:100%;
+    background: var(--background);
+    padding: 10px;
+    text-align: center;
+}
+.content {
+    flex-grow: 1;
+  }
+.footer {
+    width:100%;
+    background: var(--background);
+    min-height: 50px;
+    flex-shrink: 0;
+}
+.footer-content {
+    margin-right: 16px;
+    margin-left: 16px;
+    text-align: right;
 }
 button {
     padding: 10px 20px;
     font-size: 16px;
 }
 .container {
-    width: 370px;
-    height: 600px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
 }
 /* Media query for screens with a maximum width of 768px (mobile devices) */
 @media screen and (max-width: 768px) {
     #trainContainer {
         display: block; /* Change to a block layout for mobile */
+        margin-top: 0px;
     }
 
     .container {
@@ -28,14 +50,19 @@ button {
 /* Media query for screens with a minimum width of 769px (desktop and iPad) */
 @media screen and (min-width: 769px) {
     #trainContainer {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        margin-left: 20px;
+        margin-top: 20px;
+        display: block; /* Change to a block layout for mobile */
+        text-align: center;
     }
-}
-
-#trainContainer {
-    margin-top: 20px;
+    .container {
+        display: inline-grid;
+        margin: 10px;
+        vertical-align: top;
+        border: 1px solid #ccc;
+        width: 370px;
+        height: 600px;
+        border-radius: 5px;
+    }
 }
 
 .train {
@@ -71,16 +98,6 @@ button {
     font-size: 1.5em;
     margin-top: 10px;
     margin-bottom: 0px;
-}
-
-#display {
-    background-color: #f0f0f0;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 150px;
-    text-align: right;
-    margin-bottom: 10px;
 }
 .train-control {
     display: flex;

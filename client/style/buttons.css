@@ -31,3 +31,7 @@ button.active {
     flex: 1; /* Each button covers 50% of the container width */
     text-align: center; /* Optional: Center-align the button content */
 }
+.add-train-button {
+    padding: 0;
+    margin: 0;
+}
