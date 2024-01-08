@@ -9,14 +9,8 @@ button {
 .function-panel button name {
     font-size: 0.7em;
 }
-/* Style for the active (pressed/on) buttons */
-.function-panel button.active {
-    background-color: #007bff; /* Change to your desired active button color */
-    color: #fff; /* Change to your desired active button text color */
-}
 
-/* Style for the active (pressed/on) buttons */
-.direction-buttons button.active {
+button.active {
     background-color: #007bff; /* Change to your desired active button color */
     color: #fff; /* Change to your desired active button text color */
 }
