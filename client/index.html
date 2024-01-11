@@ -3,6 +3,9 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="Thu, 01 Jan 1970 00:00:00 GMT">
         <title>Add trains</title>
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
@@ -11,55 +14,39 @@
         <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
         <!--<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>-->
 
+        <script src="js/trainPanel.js"></script>
+        <script src="js/serverSettings.js"></script>
+
         <link rel="stylesheet" href="style/main.css">
         <link rel="stylesheet" href="style/buttons.css">
         <link rel="stylesheet" href="style/range_input.css">
         <link rel="stylesheet" href="style/popup.css">
-
+        <link rel="manifest" href="manifest.json">
         <meta name="apple-mobile-web-app-capable" content="yes">
     </head>
 <body>
-    <div class="content">
     <nav id="topNav" class="topNav">
         <button id="trainControl" class="navButton">Trains</button>
         <button id="accessoriesControl" class="navButton">Accessories</button>
     </nav>
-    <div id="trainContainer" class="containers">
-        <div id="container1" class="container">
-            <button class="add-train-button">Add Train</button>
-        </div>
-        <!--
-        <div id="container2" class="container">
-            <button class="add-train-button">Add Train</button>
-        </div>
-        <div id="container3" class="container">
-            <button class="add-train-button">Add Train</button>
-        </div>-->
+    <div id="menuIcon" class="menu-icon">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
     </div>
-
-    <div id="popup" class="popup">
-        <div class="popup-content">
-            <span class="close" id="closePopup">&times;</span>
-            <h2>Enter a Number (1-9999)</h2>
-            <input type="text" id="popupInput" readonly>
-            <div id="popupKeypad">
-                <button class="popup-key">1</button>
-                <button class="popup-key">2</button>
-                <button class="popup-key">3</button>
-                <button class="popup-key">4</button>
-                <button class="popup-key">5</button>
-                <button class="popup-key">6</button>
-                <button class="popup-key">7</button>
-                <button class="popup-key">8</button>
-                <button class="popup-key">9</button>
-                <button class="popup-key">0</button>
-                <button id="clearPopup" class="popup-key">C</button>
-                <button id="confirmButton" class="popup-key">OK</button>
-            </div>
-        </div>
-    </div>
-    </div>
-
+    <section class="content">
+        <nav id="main-menu">
+            <ul>
+                <li target="AddTrain">Add Train</li>
+                <li target="addAccessory">Add Accessory</li>
+                <li target="serverSettings">Server settings</li>
+            </ul>
+        </nav>
+        <section id="serverSettings">
+        </section>
+        <section id="trainPanel">
+        </section>
+    </section>
 
 <template id="trainTemplate">
     <div class="train">
@@ -112,10 +99,7 @@
     </div>
 </template>
 
-
-
     <script src="script.js"></script>
-
     <footer id="footer" class="footer">
         <div class="footer-content">
             Server conntected

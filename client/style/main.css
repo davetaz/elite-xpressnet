@@ -12,6 +12,7 @@ nav {
     background: var(--background);
     padding: 10px;
     text-align: center;
+    padding-right: 20px;
 }
 .content {
     flex-grow: 1;
@@ -21,6 +22,7 @@ nav {
     background: var(--background);
     min-height: 50px;
     flex-shrink: 0;
+    margin-top: 0px;
 }
 .footer-content {
     margin-right: 16px;
@@ -35,15 +37,27 @@ button {
 }
 /* Media query for screens with a maximum width of 768px (mobile devices) */
 @media screen and (max-width: 768px) {
+    body {
+        overflow-y: hidden;
+    }
     #trainContainer {
         display: block; /* Change to a block layout for mobile */
         margin-top: 0px;
     }
-
+    #container2 {
+        display: none;
+    }
+    #container3 {
+        display: none;
+    }
+    #container4 {
+        display: none;
+    }
     .container {
         width: 100%; /* Full screen width for mobile */
-        height: auto; /* Allow the height to adjust to content */
-        margin-bottom: 10px; /* Optional: Add margin between containers */
+        min-height: calc(100vh - 180px); /* Allow the height to adjust to content */
+        text-align: center;
+        display: inline-grid;
     }
 }
 
@@ -62,6 +76,9 @@ button {
         width: 370px;
         height: 600px;
         border-radius: 5px;
+    }
+    .container-selector {
+        display: none;
     }
 }
 
@@ -109,4 +126,7 @@ button {
     font-size: 2em;
     top: -10px;
     position: relative;
+}
+#serverSettings {
+    margin: 30px;
 }
