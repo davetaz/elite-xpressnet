@@ -42,7 +42,14 @@ function setuptrainPanel() {
 }
 
 function setThrottleSpeed(trainNumber, speed, direction) {
-    return fetch(`http://127.0.0.1:8080/train/${trainNumber}/throttle`, {
+    console.log(trainNumber);
+    /*
+    if (serverStatus != "online"){
+        log('Cannot send command, server ' + serverStatus );
+        return;
+    }
+    */
+    return fetch(`http://${server}/train/${trainNumber}/throttle`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -57,8 +64,14 @@ function setThrottleSpeed(trainNumber, speed, direction) {
 
 // Function to set the function state
 function setFunctionState(trainNumber, functionNumber, state) {
+    /*
+    if (serverStatus != "online"){
+        log('Cannot send command, server ' + serverStatus );
+        return;
+    }
+    */
     // Make a PUT request to update the function state
-    fetch(`http://127.0.0.1:8080/train/${trainNumber}/function/${functionNumber}`, {
+    fetch(`http://${server}/train/${trainNumber}/function/${functionNumber}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -75,7 +88,8 @@ function setFunctionState(trainNumber, functionNumber, state) {
     });
 }
 
-function createTrain(container, number) {
+async function createTrain(container, number) {
+    console.log(number);
     container.innerHTML = "";
     const trainTemplate = document.getElementById("trainTemplate");
     const clone = document.importNode(trainTemplate.content, true);
@@ -103,22 +117,24 @@ function createTrain(container, number) {
         }
 
         // Set a new timer to execute the fetch after 100ms
-        sliderInputTimer = setTimeout(() => {
+        sliderInputTimer = setTimeout( async () => {
             const direction = forwardButton.classList.contains("active") ? 1 : 0; // Determine the current direction
             const speed = parseInt(slider.value, 10);
             sliderValue.textContent = speed;
             console.log(JSON.stringify({ direction, speed }));
 
-            // Call the setThrottleSpeed function to update the server
-            setThrottleSpeed(number, speed, direction)
-                .then((data) => {
-                    // Handle the response if needed
-                    console.log("Server response:", data);
-                });
+            try {
+                const data = await setThrottleSpeed(number, speed, direction);
+                // Handle the response if needed
+                console.log("Server response:", data);
+            } catch (error) {
+                // Handle errors here
+                console.error("Error updating server:", error);
+            }
         }, 100); // Execute the fetch after 100ms of no slider input events
     });
 
-    reverseButton.addEventListener("click", () => {
+    reverseButton.addEventListener("click", async () => {
         // Set the clicked button as active and the other as inactive
         reverseButton.classList.add("active");
         forwardButton.classList.remove("active");
@@ -127,14 +143,17 @@ function createTrain(container, number) {
         const direction = 0;
         const speed = parseInt(slider.value, 10);
         sliderValue.textContent = speed;
-        setThrottleSpeed(number, speed, direction)
-            .then((data) => {
-                // Handle the response if needed
-                console.log("Server response:", data);
-            });
+        try {
+            const data = await setThrottleSpeed(number, speed, direction);
+            // Handle the response if needed
+            console.log("Server response:", data);
+        } catch (error) {
+            // Handle errors here
+            console.error("Error updating server:", error);
+        }
     });
 
-    forwardButton.addEventListener("click", () => {
+    forwardButton.addEventListener("click", async () => {
         // Set the clicked button as active and the other as inactive
         forwardButton.classList.add("active");
         reverseButton.classList.remove("active");
@@ -143,16 +162,19 @@ function createTrain(container, number) {
         const direction = 1;
         const speed = parseInt(slider.value, 10);
         sliderValue.textContent = speed;
-        setThrottleSpeed(number, speed, direction)
-            .then((data) => {
-                // Handle the response if needed
-                console.log("Server response:", data);
-            });
+        try {
+            const data = await setThrottleSpeed(number, speed, direction);
+            // Handle the response if needed
+            console.log("Server response:", data);
+        } catch (error) {
+            // Handle errors here
+            console.error("Error updating server:", error);
+        }
     });
 
     const stopButton = clone.querySelector("#Stop");
 
-    stopButton.addEventListener("click", () => {
+    stopButton.addEventListener("click", async () => {
         // 1. Set the speed to 0 and update the slider to this value
         const speed = 0;
         slider.value = speed;
@@ -166,16 +188,19 @@ function createTrain(container, number) {
 
         // 3. Call setThrottleSpeed with speed 0
         const direction = forwardButton.classList.contains("active") ? 1 : 0; // Determine the current direction
-        setThrottleSpeed(number, speed, direction)
-            .then((data) => {
-                // Handle the response if needed
-                console.log("Server response:", data);
-            });
+        try {
+            const data = await setThrottleSpeed(number, speed, direction);
+            // Handle the response if needed
+            console.log("Server response:", data);
+        } catch (error) {
+            // Handle errors here
+            console.error("Error updating server:", error);
+        }
     });
 
     const functionButtons = clone.querySelectorAll(".function-button");
     functionButtons.forEach((button) => {
-        button.addEventListener("click", () => {
+        button.addEventListener("click", async () => {
             console.log('hello');
             button.classList.toggle("active");
 
@@ -184,7 +209,14 @@ function createTrain(container, number) {
             const state = button.classList.contains("active") ? 1 : 0;
 
             // Call setFunctionState to update the function state
-            setFunctionState(number, functionNumber, state);
+            try {
+                const data = await setFunctionState(number, functionNumber, state);
+                // Handle the response if needed
+                console.log("Server response:", data);
+            } catch (error) {
+                // Handle errors here
+                console.error("Error updating server:", error);
+            }
         });
     });
 

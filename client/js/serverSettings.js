@@ -5,7 +5,7 @@ function setupserverSettings() {
     var messageDiv = document.getElementById("message");
 
     // Get the current server value from localStorage, if available
-    var currentServer = localStorage.getItem("server");
+    var currentServer = localStorage.getItem("dctDCC-Server");
 
     // Get a reference to the server input field
     var serverInput = document.getElementById("serverInput");
@@ -23,7 +23,7 @@ function setupserverSettings() {
         var serverValue = serverInput.value;
 
         // Save the server value to localStorage
-        localStorage.setItem("server", serverValue);
+        localStorage.setItem("dctDCC-Server", serverValue);
 
         // Update the message div with the saved server value
         messageDiv.textContent = "Server value saved: " + serverValue;

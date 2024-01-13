@@ -24,10 +24,15 @@ nav {
     flex-shrink: 0;
     margin-top: 0px;
 }
-.footer-content {
+.log {
     margin-right: 16px;
     margin-left: 16px;
-    text-align: right;
+    float: left;
+}
+.serverStatus {
+    margin-right: 16px;
+    margin-left: 16px;
+    float: right;
 }
 button {
     padding: 10px 20px;
