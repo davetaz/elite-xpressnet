@@ -132,6 +132,9 @@ button {
     top: -10px;
     position: relative;
 }
-#serverSettings {
+#serverSettings, #addTrain {
     margin: 30px;
+}
+#jsonform-1-elt-LongName {
+    width: 500px;
 }

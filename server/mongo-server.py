@@ -7,7 +7,7 @@ from flask_cors import CORS
 import time
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for the entire application
+CORS(app, supports_credentials=True)  # Enable CORS for the entire application
 
 # Initialize MongoDB client
 client = MongoClient('mongodb://localhost:27017/')
@@ -15,6 +15,7 @@ db = client['dcc_db']
 
 # Configuration: Set this flag to True to use the mock controller for development.
 USE_MOCK_CONTROLLER = True
+trains_collection = db['trains']
 
 # Dictionary to store the state of trains
 train_state = {}
@@ -62,57 +63,88 @@ def wait(secs):
 def parse_json(data):
     return json.loads(json_util.dumps(data))
 
+# Add an OPTIONS route for the same URL path
+@app.route('/train/', methods=['OPTIONS'])
+def options_train():
+    response = jsonify()
+    response.headers['Access-Control-Allow-Methods'] = 'POST'
+    return response
+
+# Add an OPTIONS route for '/train/<train_id>'
+@app.route('/train/<train_id>', methods=['OPTIONS'])
+def options_train_id(train_id):
+    response = jsonify()
+    response.headers['Access-Control-Allow-Methods'] = 'POST, PUT'
+    return response
+
 # API endpoint to create a new locomotive with metadata
-@app.route('/train', methods=['POST'])
+@app.route('/train/', methods=['POST'])
 def create_train():
     data = request.json
-    if 'identifier' not in data:
-        return jsonify({'message': 'Missing identifier in the request'}), 400
-
     trains_collection = db['trains']
-    train = trains_collection.find_one({'identifier': data['identifier']})
+
+    try:
+        # Attempt to insert the train data into the MongoDB collection
+        inserted_train = trains_collection.insert_one(data)
+        # Return the MongoDB object identifier to the client
+        return jsonify({'message': f'Train created successfully', '_id': str(inserted_train.inserted_id)}), 201
+    except Exception as e:
+        return jsonify({'message': f'An error occurred while creating the train: {str(e)}'}), 500
+
+# Route for retrieving all trains
+@app.route('/trains/', methods=['GET'])
+def get_all_trains():
+
+    # Retrieve all trains from the MongoDB collection
+    all_trains = list(trains_collection.find({}))
+
+    # Create a list to store the results
+    results = []
+
+    # Convert ObjectId to str for JSON serialization
+    for train in all_trains:
+        train["_id"] = str(train["_id"])
+        results.append(train)
+
+    # Return the array containing all trains as JSON response
+    return jsonify(results), 200
+
+# Route to search for a train by DCCNumber
+@app.route('/train', methods=['GET'])
+def get_train_by_dcc_number():
+    dcc_number = request.args.get('DCCNumber')
+
+    if not dcc_number:
+        return jsonify({'message': 'DCCNumber parameter is missing'}), 400
+
+    train = trains_collection.find_one({'DCCNumber': dcc_number})
+
     if not train:
-        train_data = {
-            'identifier': data['identifier'],
-            'config': {
-                'name': data.get('name', '')
-            },
-            'throttle': {
-            'speed': 0,
-            'direction': 0
-            },
-            'functions': {}
-        }
+        return jsonify({'message': f'Train with DCCNumber {dcc_number} not found'}), 404
 
-        trains_collection.insert_one(train_data)
-
-        return jsonify({'message': f'Train {data["identifier"]} created successfully'}), 201
-
-    else:
-        return jsonify({'message': f'Train {data["identifier"]} already exists'}), 400
+    return jsonify(train), 200
 
 # API endpoint to get train data including metadata, functions, and state
-@app.route('/train/<int:train_id>', methods=['GET','POST'])
-def control_train(train_id):
+@app.route('/train/<train_id>', methods=['GET', 'PUT'])
+def update_train(train_id):
     if request.method == 'GET':
         trains_collection = db['trains']
-        train = trains_collection.find_one({'identifier': train_id})
+        train = trains_collection.find_one({'_id': ObjectId(train_id)})
 
         if not train:
             return jsonify({'message': f'Train {train_id} not found'}), 404
 
-        return parse_json(train), 200
-    elif request.method == 'POST':
+        return jsonify(train), 200
+    elif request.method == 'PUT':
         data = request.json
 
         trains_collection = db['trains']
-        train = trains_collection.find_one({'identifier': train_id})
+        train = trains_collection.find_one({'_id': ObjectId(train_id)})
         if not train:
             return jsonify({'message': f'Train {train_id} not found'}), 404
 
-        train_metadata = train.get('config', {})
-        train_metadata.update(data)
-        trains_collection.update_one({'_id': train['_id']}, {'$set': {'config': train_metadata}})
+        # Update the entire train document with the new data
+        trains_collection.replace_one({'_id': ObjectId(train_id)}, data)
         return jsonify({'message': f'Train {train_id} updated successfully'}), 200
 
 # API endpoint to control the throttle of a train

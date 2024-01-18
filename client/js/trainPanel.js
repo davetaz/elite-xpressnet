@@ -42,13 +42,10 @@ function setuptrainPanel() {
 }
 
 function setThrottleSpeed(trainNumber, speed, direction) {
-    console.log(trainNumber);
-    /*
     if (serverStatus != "online"){
         log('Cannot send command, server ' + serverStatus );
         return;
     }
-    */
     return fetch(`http://${server}/train/${trainNumber}/throttle`, {
         method: "PUT",
         headers: {
@@ -64,12 +61,10 @@ function setThrottleSpeed(trainNumber, speed, direction) {
 
 // Function to set the function state
 function setFunctionState(trainNumber, functionNumber, state) {
-    /*
     if (serverStatus != "online"){
         log('Cannot send command, server ' + serverStatus );
         return;
     }
-    */
     // Make a PUT request to update the function state
     fetch(`http://${server}/train/${trainNumber}/function/${functionNumber}`, {
         method: "PUT",

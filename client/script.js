@@ -1,11 +1,19 @@
 let currentScreen = "trainPanel";
-let serverStatus = "undefined"
+let serverStatus = "undefined";
 let server = "";
 let logTimeoutId;
 
 document.addEventListener("DOMContentLoaded", function () {
+    let prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    let html = document.querySelector('html');
+
+    html.classList.add(prefers);
+    html.setAttribute('data-bs-theme', prefers);
+
     loadSection('trainPanel');
     loadSection('serverSettings');
+    loadSection('addTrain');
+    loadSection('viewTrains');
 
     showScreen(currentScreen);
     pollServer();
@@ -14,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 async function pollServer() {
     if (localStorage.getItem("dctDCC-Server")) {
-        const server = localStorage.getItem("dctDCC-Server");
+        server = localStorage.getItem("dctDCC-Server");
         const url = `http://${server}/train/3/throttle`;
 
         try {
@@ -43,6 +51,7 @@ async function pollServer() {
 }
 
 function loadSection(id) {
+    console.log("loadSection " + id)
     var element = document.getElementById(id);
     fetch(`sections/${id}.html`)
     .then(response => response.text())
@@ -99,6 +108,7 @@ menuContainer.addEventListener("click", function(event) {
     var clickedElement = event.target;
     if (clickedElement.tagName === "LI") {
         var screenId = clickedElement.getAttribute('target');
+        window["setup" + screenId]();
         showScreen(screenId);
     }
 });

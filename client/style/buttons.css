@@ -1,3 +1,9 @@
+@font-face {
+    font-family: 'Glyphicons Halflings';
+
+    src: url('../fonts/glyphicons-halflings-regular.eot');
+    src: url('../fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('../fonts/glyphicons-halflings-regular.woff2') format('woff2'), url('../fonts/glyphicons-halflings-regular.woff') format('woff'), url('../fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('../fonts/glyphicons-halflings-regular.svg#glyphicons_halflingsregular') format('svg');
+  }
 button {
     padding: 10px 10px;
 }
@@ -79,3 +85,61 @@ button.active {
 #main-menu li:last-child {
     border-bottom: none; /* Remove border from the last item */
 }
+.glyphicon {
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: normal;
+    font-size: 2em;
+    line-height: 1;
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .glyphicon-asterisk:before {
+    content: "\002a";
+  }
+  .glyphicon-plus:before {
+    content: "\002b";
+  }
+  .glyphicon-euro:before,
+  .glyphicon-eur:before {
+    content: "\20ac";
+  }
+  .glyphicon-minus:before {
+    content: "\2212";
+  }
+  .glyphicon-plus-sign:before {
+    content: "\e081";
+  }
+  .glyphicon-minus-sign:before {
+    content: "\e082";
+  }
+  .glyphicon-remove-sign:before {
+    content: "\e083";
+  }
+  ._jsonform-array-deletelast {
+    display: none;
+  }
+  #jsonform-1-elt-DCCConfig > ul > li > ._jsonform-array-buttons {
+    position: relative;
+    top: -180px;
+    left: -40px;
+  }
+  #jsonform-1-elt-DCCConfig > ._jsonform-array-buttons {
+    position: relative ;
+    top: -1em;
+    left: 2.4em;
+  }
+  #jsonform-1-elt-DCCFunctions > ul > li > ._jsonform-array-buttons {
+    position: relative;
+    top: -160px;
+    left: -40px;
+  }
+  #jsonform-1-elt-DCCFunctions > ._jsonform-array-buttons {
+    position: relative ;
+    top: -1em;
+    left: 2.4em;
+  }
