@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
 import json
-from bson import json_util
+from bson import json_util, ObjectId
 from flask_cors import CORS
 
 import time
@@ -74,7 +74,7 @@ def options_train():
 @app.route('/train/<train_id>', methods=['OPTIONS'])
 def options_train_id(train_id):
     response = jsonify()
-    response.headers['Access-Control-Allow-Methods'] = 'POST, PUT'
+    response.headers['Access-Control-Allow-Methods'] = 'POST, PUT, DELETE'
     return response
 
 # API endpoint to create a new locomotive with metadata
@@ -125,8 +125,9 @@ def get_train_by_dcc_number():
     return jsonify(train), 200
 
 # API endpoint to get train data including metadata, functions, and state
-@app.route('/train/<train_id>', methods=['GET', 'PUT'])
+@app.route('/train/<train_id>', methods=['GET', 'PUT', 'DELETE'])
 def update_train(train_id):
+
     if request.method == 'GET':
         trains_collection = db['trains']
         train = trains_collection.find_one({'_id': ObjectId(train_id)})
@@ -134,9 +135,16 @@ def update_train(train_id):
         if not train:
             return jsonify({'message': f'Train {train_id} not found'}), 404
 
+         # Convert ObjectId to string before serializing to JSON
+        train['_id'] = str(train['_id'])
+
         return jsonify(train), 200
+
     elif request.method == 'PUT':
         data = request.json
+        # Remove the _id field from the data dictionary
+        if '_id' in data:
+            del data['_id']
 
         trains_collection = db['trains']
         train = trains_collection.find_one({'_id': ObjectId(train_id)})
@@ -144,8 +152,18 @@ def update_train(train_id):
             return jsonify({'message': f'Train {train_id} not found'}), 404
 
         # Update the entire train document with the new data
+
         trains_collection.replace_one({'_id': ObjectId(train_id)}, data)
         return jsonify({'message': f'Train {train_id} updated successfully'}), 200
+
+    elif request.method == 'DELETE':
+        trains_collection = db['trains']
+        result = trains_collection.delete_one({'_id': ObjectId(train_id)})
+
+        if result.deleted_count == 0:
+            return jsonify({'message': f'Train {train_id} not found'}), 404
+
+        return jsonify({'message': f'Train {train_id} deleted successfully'}), 200
 
 # API endpoint to control the throttle of a train
 @app.route('/train/<int:train_number>/throttle', methods=['PUT', 'GET'])

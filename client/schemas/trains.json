@@ -1,5 +1,5 @@
 {
-    "TrainID": {
+    "_id": {
       "type": "hidden"
     },
     "Make": {
@@ -12,6 +12,11 @@
       "maxLength": 255,
       "title": "Model"
     },
+    "Type": {
+      "type": "string",
+      "enum": ["","Steam Engine", "Diesel Loco", "EMU", "DEMU", "Electric loco", "HST", "Bi-modal loco", "Bi-modal multiple unit", "Coach", "Wagon", "Steam railmotor", "Track maintenance vehicle", "Underground vehicle"],
+      "title": "Type"
+    },
     "ShortName": {
       "type": "string",
       "maxLength": 20,
@@ -22,10 +27,10 @@
       "type": "string",
       "title": "LongName"
     },
-    "Operational": {
+    "Status": {
       "type": "string",
-      "enum": ["","Yes", "No"],
-      "title": "Operational"
+      "enum": ["","Operational", "Non operational", "Static", "Other"],
+      "title": "Status"
     },
     "Picture": {
       "type": "file",
@@ -46,7 +51,7 @@
       "maximum": 9999,
       "title": "DCCNumber"
     },
-    "DCCConfig": {
+    "DCCDecoders": {
       "type": "array",
       "items": {
         "type": "object",

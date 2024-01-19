@@ -1,4 +1,7 @@
 function setupaddTrain(data) {
+    if (data) {
+      $('#addTrainTitle').html("Edit Train");
+    }
     $('#addTrainForm').html("");
     $('#res').html("");
     $('form').show();
@@ -10,6 +13,7 @@ function setupaddTrain(data) {
           // Use the fetched schema to set up the form
           $('#addTrainForm').jsonForm({
               schema: schema,
+              value: data,
               onSubmit: function (errors, values) {
                   if (errors) {
                       $('#res').html('<p>Please correct the errors in your form</p>');
@@ -37,12 +41,12 @@ async function sendDataToServer(inputObject) {
   let url;
   let method;
 
-  if (inputObject.TrainID && inputObject.TrainID != "") {
-    // If TrainID is set, use PUT to update existing data
-    url = `http://${server}/train/${inputObject.TrainID}`;
+  if (inputObject._id && inputObject._id != "") {
+    // If _id is set, use PUT to update existing data
+    url = `http://${server}/train/${inputObject._id}`;
     method = "PUT";
   } else {
-    // If TrainID is not set, use POST to create new data
+    // If _id is not set, use POST to create new data
     url = `http://${server}/train/`;
     method = "POST";
   }
@@ -61,12 +65,12 @@ async function sendDataToServer(inputObject) {
       const responseData = await response.json();
       const newTrainID = responseData._id; // Replace with the actual field name from the response
 
-      // Populate the hidden TrainID element in the form with the newTrainID
-      const hiddenTrainIDElement = document.getElementsByName("TrainID")[0];
+      // Populate the hidden _id element in the form with the newTrainID
+      const hiddenTrainIDElement = document.getElementsByName("_id")[0];
       if (hiddenTrainIDElement) {
         hiddenTrainIDElement.value = newTrainID;
       }
-      $('#res').html('<p>Train created</p>');
+      $('#res').html('<p>'+responseData.message+'</p>');
       $('form').hide();
     } else {
       console.error("Request failed with status:", response.status);

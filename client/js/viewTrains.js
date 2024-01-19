@@ -13,10 +13,15 @@ function setupviewTrains() {
         if (schema) {
             for (var key in schema) {
                 var columnTitle = schema[key].title || key; // Use title from schema or key if title is not available
-                columns.push({ title: columnTitle, data: key });
+                if (schema[key].type == 'hidden' || schema[key].type == 'file') {
+                    //ignore these
+                } else {
+                    columns.push({ title: columnTitle, data: key });
+                }
             }
+            columns.push({title: 'Edit', data: "Edit"});
+            columns.push({title: 'Delete', data: "Delete"});
         }
-
         // Initialize the DataTable with columns
         var table = $('#trainTable').DataTable({
             columns: columns,
@@ -44,9 +49,50 @@ function setupviewTrains() {
                             rowData[key] = data[i][key] || "";
                         }
                     }
+                    // Add an "Edit" link column
+                    rowData['Edit'] = `<a href="javascript:void(0);" onclick="editTrain('${data[i]._id}');">Edit</a>`;
+                    rowData['Delete'] = `<a href="javascript:void(0);" onclick="confirmDelete('${data[i]._id}','${data[i].ShortName}');">Delete</a>`;
+                    // Add edit here
+                    // Add delete here
                     table.row.add(rowData).draw(false);
                 }
             }
         });
     });
+}
+
+// Function to confirm train deletion
+function confirmDelete(trainId, trainShortName) {
+    if (confirm('Are you sure you want to delete the train: ' + trainShortName + '?')) {
+        // Send a DELETE request to the server using fetch
+        fetch(`http://${server}/train/${trainId}`, {
+            method: 'DELETE',
+        })
+        .then(response => {
+            if (response.ok) {
+                // Train deleted successfully, refresh the table
+                setupviewTrains();
+            } else {
+                alert('Failed to delete the train.');
+            }
+        })
+        .catch(error => {
+            console.error('An error occurred:', error);
+            alert('Failed to delete the train.');
+        });
+    }
+}
+
+function editTrain(trainID) {
+    // Make an HTTP GET request to fetch data for the specified TrainID
+    fetch(`http://${server}/train/${trainID}`)
+        .then(response => response.json())
+        .then(trainData => {
+            // Call setupaddTrain with the fetched data
+            setupaddTrain(trainData);
+            showScreen('addTrain');
+        })
+        .catch(error => {
+            console.error("An error occurred:", error);
+        });
 }
