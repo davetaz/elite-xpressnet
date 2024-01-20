@@ -13,7 +13,7 @@ function setupviewTrains() {
         if (schema) {
             for (var key in schema) {
                 var columnTitle = schema[key].title || key; // Use title from schema or key if title is not available
-                if (schema[key].type == 'hidden' || schema[key].type == 'file') {
+                if (schema[key].type == 'hidden') {
                     //ignore these
                 } else {
                     columns.push({ title: columnTitle, data: key });
@@ -31,8 +31,8 @@ function setupviewTrains() {
             ]
         });
 
-        // Make an HTTP GET request to fetch data from http://${server}/trains/
-        $.get(`http://${server}/trains/`, function (data) {
+        // Make an HTTP GET request to fetch data from //${server}/trains/
+        $.get(`//${server}/trains/`, function (data) {
             // Assuming 'data' is an array of train objects
             if (data) {
                 // Iterate over the train data and add rows to the DataTable
@@ -45,6 +45,8 @@ function setupviewTrains() {
                             } else {
                                 rowData[key] = 0;
                             }
+                        } else if (schema[key].type === 'file') {
+                            rowData[key] = `<img src="//${server}/train/${data[i]._id}/${data[i][key]}" class="tablePicture"/>`
                         } else {
                             rowData[key] = data[i][key] || "";
                         }
@@ -65,7 +67,7 @@ function setupviewTrains() {
 function confirmDelete(trainId, trainShortName) {
     if (confirm('Are you sure you want to delete the train: ' + trainShortName + '?')) {
         // Send a DELETE request to the server using fetch
-        fetch(`http://${server}/train/${trainId}`, {
+        fetch(`//${server}/train/${trainId}`, {
             method: 'DELETE',
         })
         .then(response => {
@@ -85,7 +87,7 @@ function confirmDelete(trainId, trainShortName) {
 
 function editTrain(trainID) {
     // Make an HTTP GET request to fetch data for the specified TrainID
-    fetch(`http://${server}/train/${trainID}`)
+    fetch(`//${server}/train/${trainID}`)
         .then(response => response.json())
         .then(trainData => {
             // Call setupaddTrain with the fetched data

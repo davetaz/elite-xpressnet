@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
 async function pollServer() {
     if (localStorage.getItem("dctDCC-Server")) {
         server = localStorage.getItem("dctDCC-Server");
-        const url = `http://${server}/train/3/throttle`;
+        const url = `//${server}/train/3/throttle`;
 
         try {
             const response = await fetch(url);
@@ -109,6 +109,15 @@ menuContainer.addEventListener("click", function(event) {
     if (clickedElement.tagName === "LI") {
         var screenId = clickedElement.getAttribute('target');
         window["setup" + screenId]();
+        showScreen(screenId);
+    }
+});
+
+var topNav = document.getElementById("topNav");
+topNav.addEventListener("click", function(event) {
+    var clickedElement = event.target;
+    if (clickedElement.tagName === "BUTTON") {
+        var screenId = clickedElement.getAttribute('target');
         showScreen(screenId);
     }
 });

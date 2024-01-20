@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, request, jsonify, send_from_directory
 from pymongo import MongoClient
 import json
 from bson import json_util, ObjectId
@@ -16,6 +17,10 @@ db = client['dcc_db']
 # Configuration: Set this flag to True to use the mock controller for development.
 USE_MOCK_CONTROLLER = True
 trains_collection = db['trains']
+
+# Configuration for file upload
+UPLOAD_FOLDER = 'data'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Dictionary to store the state of trains
 train_state = {}
@@ -113,19 +118,26 @@ def get_all_trains():
 @app.route('/train', methods=['GET'])
 def get_train_by_dcc_number():
     dcc_number = request.args.get('DCCNumber')
+    print(dcc_number)
 
     if not dcc_number:
         return jsonify({'message': 'DCCNumber parameter is missing'}), 400
+
+    try:
+        dcc_number = int(dcc_number)
+    except ValueError:
+        return jsonify({'message': 'DCCNumber must be an integer'}), 400
 
     train = trains_collection.find_one({'DCCNumber': dcc_number})
 
     if not train:
         return jsonify({'message': f'Train with DCCNumber {dcc_number} not found'}), 404
 
+    train["_id"] = str(train["_id"])
     return jsonify(train), 200
 
 # API endpoint to get train data including metadata, functions, and state
-@app.route('/train/<train_id>', methods=['GET', 'PUT', 'DELETE'])
+@app.route('/train/<train_id>', methods=['GET', 'PUT', 'DELETE', 'POST'])
 def update_train(train_id):
 
     if request.method == 'GET':
@@ -154,16 +166,63 @@ def update_train(train_id):
         # Update the entire train document with the new data
 
         trains_collection.replace_one({'_id': ObjectId(train_id)}, data)
-        return jsonify({'message': f'Train {train_id} updated successfully'}), 200
+        return jsonify({'message': f'Train {train_id} updated successfully', '_id': train_id}), 200
 
     elif request.method == 'DELETE':
         trains_collection = db['trains']
         result = trains_collection.delete_one({'_id': ObjectId(train_id)})
 
+        # Delete the associated directory and picture file
+        directory_path = os.path.join(app.config['UPLOAD_FOLDER'], train_id)
+        if os.path.exists(directory_path):
+            try:
+                os.rmdir(directory_path)
+            except OSError as e:
+                print(f"Error deleting directory: {e}")
+
         if result.deleted_count == 0:
             return jsonify({'message': f'Train {train_id} not found'}), 404
 
         return jsonify({'message': f'Train {train_id} deleted successfully'}), 200
+
+    elif request.method == 'POST':
+        # Check if the POST request has a file part
+        if 'picture' not in request.files:
+            return jsonify({'message': 'No file part'}), 400
+
+        file = request.files['picture']
+
+        # If the user does not select a file, the browser submits an empty file
+        if file.filename == '':
+            return jsonify({'message': 'No selected file'}), 400
+
+        # Check if the train directory exists, and create it if not
+        directory_path = os.path.join(app.config['UPLOAD_FOLDER'], train_id)
+        if not os.path.exists(directory_path):
+            try:
+                os.makedirs(directory_path)
+            except OSError as e:
+                print(f"Error creating directory: {e}")
+                return jsonify({'message': 'Failed to create directory'}), 500
+
+        # Save the uploaded file with its original filename
+        file_path = os.path.join(directory_path, file.filename)
+        file.save(file_path)
+
+        return jsonify({'message': 'File uploaded successfully'}), 200
+
+@app.route('/train/<train_id>/<path:filename>', methods=['GET'])
+def serve_picture(train_id, filename):
+    print('jello')
+    # Construct the path to the picture file
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], train_id, filename)
+
+    # Check if the file exists
+    if os.path.isfile(file_path):
+        # Serve the file from the specified directory
+        return send_from_directory(os.path.dirname(file_path), filename)
+    else:
+        return jsonify({'message': 'Picture not found'}), 404
 
 # API endpoint to control the throttle of a train
 @app.route('/train/<int:train_number>/throttle', methods=['PUT', 'GET'])

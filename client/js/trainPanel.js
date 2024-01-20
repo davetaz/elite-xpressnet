@@ -46,7 +46,7 @@ function setThrottleSpeed(trainNumber, speed, direction) {
         log('Cannot send command, server ' + serverStatus );
         return;
     }
-    return fetch(`http://${server}/train/${trainNumber}/throttle`, {
+    return fetch(`//${server}/train/${trainNumber}/throttle`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -84,7 +84,6 @@ function setFunctionState(trainNumber, functionNumber, state) {
 }
 
 async function createTrain(container, number) {
-    console.log(number);
     container.innerHTML = "";
     const trainTemplate = document.getElementById("trainTemplate");
     const clone = document.importNode(trainTemplate.content, true);
@@ -93,6 +92,25 @@ async function createTrain(container, number) {
     // Set the train number
     const trainNumber = clone.querySelector(".train-number");
     trainNumber.textContent = number;
+
+    const response = await fetch(`//${server}/train?DCCNumber=${number}`);
+
+    if (response.ok) {
+        const trainData = await response.json();
+
+        // Check if train data exists
+        if (trainData) {
+
+            const makeElement = clone.querySelector(".train-name");
+            makeElement.textContent = trainData.ShortName;
+            const imgElement = clone.querySelector(".train-image img");
+            imgElement.src = `//${server}/train/${trainData._id}/${trainData.Picture}`;
+
+        }
+    } else {
+        const makeElement = clone.querySelector(".train-name");
+        makeElement.textContent = `Train #${number}`;
+    }
 
     // Set up the slider and its value display
     const slider = clone.querySelector(".throttle");
