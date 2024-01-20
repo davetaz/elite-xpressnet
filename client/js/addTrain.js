@@ -106,20 +106,23 @@ async function sendDataToServer(inputObject) {
       // Create a FormData object to store the picture file
       const formData = new FormData();
       const pictureInput = document.querySelector('input[type="file"]');
-      formData.append('picture', pictureInput.files[0]);
 
-      // Send a POST request to upload the picture to the server's directory
-      const pictureResponse = await fetch(`//${server}/train/${newTrainID}`, {
-        method: 'POST',
-        body: formData,
-      });
+      if (pictureInput.files[0]) {
+        formData.append('picture', pictureInput.files[0]);
 
-      if (pictureResponse.ok) {
-        // Request to upload picture was successful
-        // You can handle the success accordingly
-        console.log('Picture uploaded successfully');
-      } else {
-        console.error("Failed to upload picture:", pictureResponse.status);
+        // Send a POST request to upload the picture to the server's directory
+        const pictureResponse = await fetch(`//${server}/train/${newTrainID}`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (pictureResponse.ok) {
+          // Request to upload picture was successful
+          // You can handle the success accordingly
+          //console.log('Picture uploaded successfully');
+        } else {
+          console.error("Failed to upload picture:", pictureResponse.status);
+        }
       }
 
       // Populate the hidden _id element in the form with the newTrainID

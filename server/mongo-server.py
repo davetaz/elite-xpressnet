@@ -86,11 +86,16 @@ def options_train_id(train_id):
 @app.route('/train/', methods=['POST'])
 def create_train():
     data = request.json
+    # Remove the _id field from the data dictionary
+    if '_id' in data:
+        del data['_id']
+
     trains_collection = db['trains']
 
     try:
         # Attempt to insert the train data into the MongoDB collection
         inserted_train = trains_collection.insert_one(data)
+
         # Return the MongoDB object identifier to the client
         return jsonify({'message': f'Train created successfully', '_id': str(inserted_train.inserted_id)}), 201
     except Exception as e:
