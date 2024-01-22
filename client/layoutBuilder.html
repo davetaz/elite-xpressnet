@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="Thu, 01 Jan 1970 00:00:00 GMT">
+        <title>Layout builder</title>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+        <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+
+        <link rel="stylesheet" href="style/main.css">
+        <link rel="stylesheet" href="style/layoutBuilder.css">
+    </head>
+<body>
+    <nav id="topNav" class="topNav">
+
+    </nav>
+
+    <section class="content">
+        <canvas id="trackCanvas" width="1024" height="800"></canvas>
+    </section>
+
+    <footer id="footer" class="footer">
+        <div id="log" class="log"></div>
+        <div class="serverStatus">
+            Server <span id="serverStatus"></span>
+        </div>
+    </footer>
+
+    <script src="js/layoutBuilder.js"></script>
+</body>
+</html>
