@@ -68,20 +68,26 @@ function drawSignal(signal) {
     ctx.lineWidth = 1;
     ctx.strokeRect(signal.x, signal.y, signal.radius * 2.5, signal.radius * 1.5);
 
-    // Draw the left circle
-    ctx.fillStyle = "red"; // Fill color for the left circle
+    if (signal.color == "red" || signal.color == "yellow" || signal.color == "dyellow") {
+        // Draw the left circle
+        ctx.fillStyle = signal.color; // Fill color for the left circle
+    } else {
+        ctx.fillStyle = backgroundColor; // Fill color for the left circle
+    }
     ctx.beginPath();
     ctx.arc(signal.x + signal.radius / 2+2, signal.y +signal.radius -2, signal.radius / 2, 0, 2 * Math.PI);
-    if (signal.color = "red") {
-        ctx.fill();
+    ctx.fill();
+
+
+    if (signal.color == "green" || signal.color == "dyellow") {
+        // Draw the left circle
+        ctx.fillStyle = signal.color; // Fill color for the left circle
+    } else {
+        ctx.fillStyle = backgroundColor; // Fill color for the left circle
     }
-/*
-    // Draw the right circle
-    ctx.fillStyle = "green"; // Fill color for the right circle
     ctx.beginPath();
     ctx.arc(signal.x + signal.radius * 2 - 2, signal.y + signal.radius / 2+2.2, signal.radius / 2, 0, 2 * Math.PI);
     ctx.fill();
-    */
 }
 
 function drawPointLHup(point) {
@@ -426,37 +432,36 @@ function switchPoint(index, isSwitched) {
         }
     }
 }
-function switchSignal(signal) {
-    console.log('switch signal');
-    // Draw the left circle
-    // Draw the signal's box
-    if (signal.color == "green") {
-        console.log("make it red");
-            // green
-        ctx.fillStyle = backgroundColor; // Set color to background color
-        ctx.beginPath();
-        ctx.arc(signal.x + signal.radius * 2 - 2, signal.y + signal.radius / 2+2.2, signal.radius / 2, 0, 2 * Math.PI);
-        ctx.fill();
-        signal.color = "red";
-        //swicth to red
-        ctx.fillStyle = "red"; // Fill color for the left circle
-        // red
-        ctx.beginPath();
-        ctx.arc(signal.x + signal.radius / 2+2, signal.y +signal.radius -2, signal.radius / 2, 0, 2 * Math.PI);
-        ctx.fill();
-    } else {
-        ctx.fillStyle = backgroundColor; // Set color to background color
-        // red
-        ctx.beginPath();
-        ctx.arc(signal.x + signal.radius / 2+2, signal.y +signal.radius -2, signal.radius / 2, 0, 2 * Math.PI);
-        ctx.fill();
-        console.log("make it green");
+
+function switchSignal(index) {
+    signal = elements[index];
+    if (signal.color == "red") {
         signal.color = "green";
-        ctx.fillStyle = "green"; // Set color to background color
-        ctx.beginPath();
-        ctx.arc(signal.x + signal.radius * 2 - 2, signal.y + signal.radius / 2+2.2, signal.radius / 2, 0, 2 * Math.PI);
-        ctx.fill();
+    } else {
+        signal.color = "red";
     }
+    console.log('switch signal');
+    console.log(signal);
+    if (signal.color == "red" || signal.color == "yellow" || signal.color == "dyellow") {
+        // Draw the left circle
+        ctx.fillStyle = signal.color; // Fill color for the left circle
+    } else {
+        ctx.fillStyle = backgroundColor; // Fill color for the left circle
+    }
+    ctx.beginPath();
+    ctx.arc(signal.x + signal.radius / 2+2, signal.y +signal.radius -2, signal.radius / 2, 0, 2 * Math.PI);
+    ctx.fill();
+
+
+    if (signal.color == "green" || signal.color == "dyellow") {
+        // Draw the left circle
+        ctx.fillStyle = signal.color; // Fill color for the left circle
+    } else {
+        ctx.fillStyle = backgroundColor; // Fill color for the left circle
+    }
+    ctx.beginPath();
+    ctx.arc(signal.x + signal.radius * 2 - 2, signal.y + signal.radius / 2+2.2, signal.radius / 2, 0, 2 * Math.PI);
+    ctx.fill();
 }
 
 //This is for the EDITOR only, not for the config.
@@ -520,6 +525,7 @@ function handleMouseMove(e) {
 }
 
 function handleDoubleClick(e) {
+    var indexToRemove = null;
     const mouseX = e.clientX - canvas.getBoundingClientRect().left;
     const mouseY = e.clientY - canvas.getBoundingClientRect().top;
 
@@ -549,7 +555,7 @@ function handleDoubleClick(e) {
         }
     }
     // Remove the point if it was found
-    if (editMode && indexToRemove !== -1) {
+    if (indexToRemove !== -1) {
         elements.splice(indexToRemove, 1);
         drawElements(); // Redraw the canvas after removing the point
     }
@@ -560,3 +566,12 @@ canvas.addEventListener("mouseup", handleMouseUp);
 canvas.addEventListener("mousemove", handleMouseMove);
 canvas.addEventListener("mousemove", handleMouseOver);
 canvas.addEventListener("dblclick", handleDoubleClick);
+// Get the checkbox element by its ID
+const editModeCheckbox = document.getElementById("editModeCheckbox");
+
+// Add an event listener to handle checkbox changes
+editModeCheckbox.addEventListener("change", function() {
+    editMode = this.checked; // Set editMode to the checkbox's checked state
+    console.log(editMode);
+    // You can perform additional actions based on the editMode state here
+});
