@@ -440,8 +440,6 @@ function switchSignal(index) {
     } else {
         signal.color = "red";
     }
-    console.log('switch signal');
-    console.log(signal);
     if (signal.color == "red" || signal.color == "yellow" || signal.color == "dyellow") {
         // Draw the left circle
         ctx.fillStyle = signal.color; // Fill color for the left circle

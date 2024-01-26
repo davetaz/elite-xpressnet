@@ -1,0 +1,21 @@
+{
+    "_id": {
+      "type": "hidden"
+    },
+    "Name": {
+      "type": "string",
+      "maxLength": 20,
+      "title": "Name (required)",
+      "required": true
+    },
+    "Loaction": {
+      "type": "string",
+      "maxLength": 20,
+      "title": "Location"
+    },
+    "Notes": {
+      "type": "textarea",
+      "maxLength": 255,
+      "title": "Notes"
+    }
+}

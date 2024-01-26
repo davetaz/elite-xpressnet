@@ -101,6 +101,40 @@ def create_train():
     except Exception as e:
         return jsonify({'message': f'An error occurred while creating the train: {str(e)}'}), 500
 
+# Add an OPTIONS route for the same URL path
+@app.route('/panel/', methods=['OPTIONS'])
+def options_panel():
+    response = jsonify()
+    response.headers['Access-Control-Allow-Methods'] = 'POST'
+    return response
+
+# Add an OPTIONS route for '/panel/<panel_id>'
+@app.route('/panel/<panel_id>', methods=['OPTIONS'])
+def options_panel_id(panel_id):
+    response = jsonify()
+    response.headers['Access-Control-Allow-Methods'] = 'POST, PUT, DELETE'
+    return response
+
+
+# API endpoint to create a new layout panel with metadata
+@app.route('/panel/', methods=['POST'])
+def create_panel():
+    data = request.json
+    # Remove the _id field from the data dictionary
+    if '_id' in data:
+        del data['_id']
+
+    collection = db['panels']
+
+    try:
+        # Attempt to insert the train data into the MongoDB collection
+        inserted_item = collection.insert_one(data)
+
+        # Return the MongoDB object identifier to the client
+        return jsonify({'message': f'Panel created successfully', '_id': str(inserted_item.inserted_id)}), 201
+    except Exception as e:
+        return jsonify({'message': f'An error occurred while creating the panel: {str(e)}'}), 500
+
 # Route for retrieving all trains
 @app.route('/trains/', methods=['GET'])
 def get_all_trains():
@@ -115,6 +149,24 @@ def get_all_trains():
     for train in all_trains:
         train["_id"] = str(train["_id"])
         results.append(train)
+
+    # Return the array containing all trains as JSON response
+    return jsonify(results), 200
+
+# Route for retrieving all panels
+@app.route('/panels/', methods=['GET'])
+def get_all_panels():
+    collection = db['panels']
+    # Retrieve all trains from the MongoDB collection
+    all_items = list(collection.find({}))
+
+    # Create a list to store the results
+    results = []
+
+    # Convert ObjectId to str for JSON serialization
+    for item in all_items:
+        item["_id"] = str(item["_id"])
+        results.append(item)
 
     # Return the array containing all trains as JSON response
     return jsonify(results), 200
@@ -203,6 +255,78 @@ def update_train(train_id):
 
         # Check if the train directory exists, and create it if not
         directory_path = os.path.join(app.config['UPLOAD_FOLDER'], train_id)
+        if not os.path.exists(directory_path):
+            try:
+                os.makedirs(directory_path)
+            except OSError as e:
+                print(f"Error creating directory: {e}")
+                return jsonify({'message': 'Failed to create directory'}), 500
+
+        # Save the uploaded file with its original filename
+        file_path = os.path.join(directory_path, file.filename)
+        file.save(file_path)
+
+        return jsonify({'message': 'File uploaded successfully'}), 200
+
+# API endpoint to get panel data including metadata, functions, and state
+@app.route('/panel/<panel_id>', methods=['GET', 'PUT', 'DELETE', 'POST'])
+def update_panel(panel_id):
+    collection = db['panels']
+    if request.method == 'GET':
+        item = collection.find_one({'_id': ObjectId(panel_id)})
+
+        if not item:
+            return jsonify({'message': f'Panel {panel_id} not found'}), 404
+
+         # Convert ObjectId to string before serializing to JSON
+        item['_id'] = str(item['_id'])
+
+        return jsonify(item), 200
+
+    elif request.method == 'PUT':
+        data = request.json
+        # Remove the _id field from the data dictionary
+        if '_id' in data:
+            del data['_id']
+
+        item = collection.find_one({'_id': ObjectId(panel_id)})
+        if not item:
+            return jsonify({'message': f'Panel {panel_id} not found'}), 404
+
+        # Update the entire panel document with the new data
+
+        collection.replace_one({'_id': ObjectId(panel_id)}, data)
+        return jsonify({'message': f'Panel {panel_id} updated successfully', '_id': panel_id}), 200
+
+    elif request.method == 'DELETE':
+        result = collection.delete_one({'_id': ObjectId(panel_id)})
+
+        # Delete the associated directory and picture file
+        directory_path = os.path.join(app.config['UPLOAD_FOLDER'], panel_id)
+        if os.path.exists(directory_path):
+            try:
+                os.rmdir(directory_path)
+            except OSError as e:
+                print(f"Error deleting directory: {e}")
+
+        if result.deleted_count == 0:
+            return jsonify({'message': f'Panel {panel_id} not found'}), 404
+
+        return jsonify({'message': f'Panel {panel_id} deleted successfully'}), 200
+
+    elif request.method == 'POST':
+        # Check if the POST request has a file part
+        if 'picture' not in request.files:
+            return jsonify({'message': 'No file part'}), 400
+
+        file = request.files['picture']
+
+        # If the user does not select a file, the browser submits an empty file
+        if file.filename == '':
+            return jsonify({'message': 'No selected file'}), 400
+
+        # Check if the panel directory exists, and create it if not
+        directory_path = os.path.join(app.config['UPLOAD_FOLDER'], panel_id)
         if not os.path.exists(directory_path):
             try:
                 os.makedirs(directory_path)

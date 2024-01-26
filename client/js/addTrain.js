@@ -3,7 +3,7 @@ function setupaddTrain(data) {
       $('#addTrainTitle').html("Edit Train");
     }
     $('#addTrainForm').html("");
-    $('#res').html("");
+    $('#trainRes').html("");
     $('form').show();
 
       // Fetch the schema from "schemas/trains.json"
@@ -42,7 +42,7 @@ function setupaddTrain(data) {
               value: data,
               onSubmit: function (errors, values) {
                   if (errors) {
-                      $('#res').html('<p>Please correct the errors in your form</p>');
+                      $('#trainRes').html('<p>Please correct the errors in your form</p>');
                   } else {
                       var inputObject = values;
 
@@ -65,7 +65,7 @@ function setupaddTrain(data) {
                       if (inputObject.DCCFunctions && Array.isArray(inputObject.DCCFunctions)) {
                           inputObject.DCCFunctions = inputObject.DCCFunctions.filter(item => item.FunctionNumber);
                       }
-                      sendDataToServer(inputObject);
+                      sendTrainDataToServer(inputObject);
                   }
               }
           });
@@ -75,7 +75,7 @@ function setupaddTrain(data) {
       });
 }
 
-async function sendDataToServer(inputObject) {
+async function sendTrainDataToServer(inputObject) {
   let url;
   let method;
 
@@ -130,7 +130,7 @@ async function sendDataToServer(inputObject) {
       if (hiddenTrainIDElement) {
         hiddenTrainIDElement.value = newTrainID;
       }
-      $('#res').html('<p>'+responseData.message+'</p>');
+      $('#trainRes').html('<p>'+responseData.message+'</p>');
       $('form').hide();
     } else {
       console.error("Request failed with status:", response.status);

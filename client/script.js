@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", function () {
     loadSection('serverSettings');
     loadSection('addTrain');
     loadSection('viewTrains');
+    loadSection('addPanel');
+    loadSection('viewPanels');
 
     showScreen(currentScreen);
     pollServer();

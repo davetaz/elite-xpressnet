@@ -12,7 +12,7 @@
         <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
 
         <link rel="stylesheet" href="style/main.css">
-        <link rel="stylesheet" href="style/layoutBuilder.css">
+        <link rel="stylesheet" href="style/panelBuilder.css">
     </head>
 <body>
     <nav id="topNav" class="topNav">
@@ -20,7 +20,7 @@
     </nav>
 
     <section class="content">
-        <canvas id="trackCanvas" width="800" height="400"></canvas>
+        <canvas id="trackCanvas" width="1024" height="600"></canvas>
         <buttons style="vertical-align: top; width: 200px; height: 400px; display: inline-block;">
             <button id="addLHup" onclick="addPoint(5, 5, 'LHup', true)">Add LH (up)</button>
             <button id="addLHdown" onclick="addPoint(5, 5, 'LHdown', true)">Add LH (down)</button>
@@ -42,6 +42,7 @@
         </div>
     </footer>
 
-    <script src="js/layoutBuilder.js"></script>
+    <script src="js/panelBuilder.js"></script>
+    <script src="js/panelBuilderServer.js"></script>
 </body>
 </html>
