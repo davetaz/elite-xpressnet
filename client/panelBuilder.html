@@ -10,6 +10,7 @@
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
         <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+        <script src="https://unpkg.com/konva@9/konva.min.js"></script>
 
         <link rel="stylesheet" href="style/main.css">
         <link rel="stylesheet" href="style/panelBuilder.css">
@@ -20,17 +21,12 @@
     </nav>
 
     <section class="content">
-        <canvas id="trackCanvas" width="1024" height="600"></canvas>
+        <div id="trackCanvas" style="width:1024px; height:600px;"></div>
         <buttons style="vertical-align: top; width: 200px; height: 400px; display: inline-block;">
-            <button id="addLHup" onclick="addPoint(5, 5, 'LHup', true)">Add LH (up)</button>
-            <button id="addLHdown" onclick="addPoint(5, 5, 'LHdown', true)">Add LH (down)</button>
-            <button id="addRHup" onclick="addPoint(5, 5, 'RHup', true)">Add RH (up)</button>
-            <button id="addRHdown" onclick="addPoint(5, 5, 'RHdown', true)">Add RH (down)</button>
-            <button id="addStraitShort" onclick="addStrait(5, 5, 'short')">Add Strait (short)</button>
-            <button id="addStraitLong" onclick="addStrait(5, 5, 'long')">Add Strait (long)</button>
-            <button id="addSignal" onclick="addSignal(10, 10, 'red')">Add Signal</button><br/>
-            <input type="checkbox" checked id="editModeCheckbox">
-            <label for="editModeCheckbox">Edit Mode</label>
+            <button id="addLHup" onclick="addPoint()">Add Point</button>
+            <button id="addStraitShort" onclick="addStrait('short')">Add Strait (short)</button>
+            <button id="addStraitLong" onclick="addStrait('long')">Add Strait (long)</button>
+            <button id="addSignal" onclick="addSignal('red')">Add Signal</button><br/>
         </buttons>
     </section>
 
