@@ -3,6 +3,7 @@ let stage = {};
 let layer = {};
 let transformer = {};
 let elements = [];
+var blockSnapSize = 45;
 // Call createKonvaStage when the page is fully loaded
 document.addEventListener("DOMContentLoaded", function () {
     stage = createKonvaStage();
@@ -19,6 +20,29 @@ function createKonvaStage() {
 
     layer = new Konva.Layer();
     stage.add(layer);
+    var width = 1024;
+    var height = 600;
+    var gridLayer = new Konva.Layer();
+    var padding = blockSnapSize;
+    console.log(width, padding, width / padding);
+    for (var i = 0; i < width / padding; i++) {
+      gridLayer.add(new Konva.Line({
+        points: [Math.round(i * padding) + 0.5, 0, Math.round(i * padding) + 0.5, height],
+        stroke: '#ddd',
+        strokeWidth: 1,
+      }));
+    }
+
+    gridLayer.add(new Konva.Line({points: [0,0,10,10]}));
+    for (var j = 0; j < height / padding; j++) {
+      gridLayer.add(new Konva.Line({
+        points: [0, Math.round(j * padding), width, Math.round(j * padding)],
+        stroke: '#ddd',
+        strokeWidth: 0.5,
+      }));
+    }
+    stage.add(gridLayer);
+
     return stage;
 }
 
@@ -79,6 +103,16 @@ function addTransformer(stage,layer) {
         // do nothing if we didn't start selection
         selecting = false;
         if (!selectionRectangle.visible()) {
+          if (!e.target.hasName('shape') && !e.target.hasName('selector')) {
+            return;
+          }
+          // Get the actual target based on the name
+          const actualTarget = e.target.hasName('selector') ? e.target.parent : e.target;
+          actualTarget.position({
+            x: Math.round(actualTarget.x() / blockSnapSize) * blockSnapSize,
+            y: Math.round(actualTarget.y() / blockSnapSize) * blockSnapSize
+          });
+          stage.batchDraw();
           return;
         }
         e.evt.preventDefault();
@@ -151,38 +185,26 @@ function addTransformer(stage,layer) {
       if (event.key === 'r' || event.key === 'R') {
           const selectedShapes = transformer.nodes();
 
-          if (selectedShapes.length > 0) {
+          if (selectedShapes.length > 1) {
               // Create a new Konva Group
               const group = new Konva.Group();
-              layer.add(group);
               // Add all selected shapes to the group
               selectedShapes.forEach((shape) => {
                   group.add(shape);
               });
-
-              // Calculate the center point of the selectionRectangle
-              const box = selectionRectangle.getClientRect();
-              let centerX = 0;
-              let centerY = 0;
-              if (box.width > 0) {
-                  centerX = box.x + box.width / 2;
-                  centerY = box.y + box.height / 2;
-              }
-
-              // Set the rotation point to the center of the selectionRectangle
-              group.offsetX(centerX);
-              group.offsetY(centerY);
-
+              layer.add(group);
+              console.log(group);
               // Perform the rotation on the group
-              group.rotation(group.rotation() + 90); // Rotate 90 degrees clockwise
+              //group.rotation(group.rotation() + 90);
 
-              // Remove the children from the group and destroy it
-              //group.removeChildren();
-              //group.destroy();
-
-              // Update the transformer to reflect the changes
               transformer.forceUpdate();
               layer.batchDraw(); // Redraw the layer
+          } else {
+            selectedShapes.forEach((shape) => {
+              shape.offsetX(shape.width() / 2);
+              shape.offsetY(shape.height() / 2);
+              shape.rotation(shape.rotation() + 90); // Rotate 90 degrees clockwise
+            });
           }
       }
   });
@@ -258,12 +280,15 @@ function addTransformer(stage,layer) {
           if (selectedShapes.length > 0) {
             // Iterate through selected shapes and rotate each one
             selectedShapes.forEach((shape) => {
-              shape.offsetX(shape.width() / 2);
-              shape.offsetY(shape.height() / 2);
+              shape.offsetX(shape.width());
+              if (shape.attrs.hflip) {
+                shape.offsetX(0);
+                shape.attrs.hflip = false;
+              } else {
+                shape.attrs.hflip = true;
+              }
               //horizonal flip
-              shape.to({
-                scaleX: -shape.scaleX(),
-              });
+              shape.scaleX(-shape.scaleX());
             });
 
             // Update the transformer to reflect the changes
@@ -279,12 +304,15 @@ function addTransformer(stage,layer) {
           if (selectedShapes.length > 0) {
             // Iterate through selected shapes and rotate each one
             selectedShapes.forEach((shape) => {
-              shape.offsetX(shape.width() / 2);
-              shape.offsetY(shape.height() / 2);
-              //horizonal flip
-              shape.to({
-                scaleY: -shape.scaleY(),
-              });
+              shape.offsetY(shape.height());
+              if (shape.attrs.vflip) {
+                shape.offsetY(0);
+                shape.attrs.vflip = false;
+              } else {
+                shape.attrs.vflip = true;
+              }
+              //vertical flip
+              shape.scaleY(-shape.scaleY());
             });
 
             // Update the transformer to reflect the changes
@@ -364,14 +392,25 @@ function createPoint(point) {
         draggable: true,
         name: point.name,
         type: point.type,
-        switched: point.switched
+        switched: point.switched,
+        vflip: point.vflip,
+        hflip: point.hflip
     })
     if (point.rotation) {
       group.rotation(point.rotation);
     }
+    if (point.vflip) {
+      group.offsetY(group.height());
+      group.scaleY(-group.scaleY());
+    }
+    if (point.hflip) {
+      group.offsetX(group.width());
+      group.scaleX(-group.scaleX());
+    }
     const selector = new Konva.Rect({
         width: point.width,
-        height: point.height,
+        height: point.width,
+        offsetY: 20,
         name: 'selector',
     })
     group.add(selector);
@@ -437,6 +476,14 @@ function createStrait(element) {
     });
     if (element.rotation) {
       group.rotation(element.rotation);
+    }
+    if (element.vflip) {
+      element.offsetY(element.height());
+      element.scaleY(-element.scaleY());
+    }
+    if (element.hflip) {
+      element.offsetX(element.width());
+      element.scaleX(-element.scaleX());
     }
     const selector = new Konva.Rect({
         width: element.width,
@@ -587,6 +634,10 @@ function loadStage() {
         if (shapeData.attrs.type == "point") {
           var point = createPoint(shapeData.attrs);
           layer.add(point);
+        }
+        if (shapeData.attrs.type == "strait") {
+          var element = createStrait(shapeData.attrs);
+          layer.add(element);
         }
       });
     });
