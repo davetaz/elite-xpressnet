@@ -3,7 +3,7 @@ let stage = {};
 let layer = {};
 let transformer = {};
 let elements = [];
-var blockSnapSize = 45;
+var blockSnapSize = 37.5;
 // Call createKonvaStage when the page is fully loaded
 document.addEventListener("DOMContentLoaded", function () {
     stage = createKonvaStage();
@@ -24,12 +24,12 @@ function createKonvaStage() {
     var height = 600;
     var gridLayer = new Konva.Layer();
     var padding = blockSnapSize;
-    console.log(width, padding, width / padding);
     for (var i = 0; i < width / padding; i++) {
       gridLayer.add(new Konva.Line({
         points: [Math.round(i * padding) + 0.5, 0, Math.round(i * padding) + 0.5, height],
         stroke: '#ddd',
-        strokeWidth: 1,
+        strokeWidth: 0.2,
+        dash: [5, 5]
       }));
     }
 
@@ -38,7 +38,8 @@ function createKonvaStage() {
       gridLayer.add(new Konva.Line({
         points: [0, Math.round(j * padding), width, Math.round(j * padding)],
         stroke: '#ddd',
-        strokeWidth: 0.5,
+        strokeWidth: 0.2,
+        dash: [5, 5]
       }));
     }
     stage.add(gridLayer);
@@ -110,7 +111,7 @@ function addTransformer(stage,layer) {
           const actualTarget = e.target.hasName('selector') ? e.target.parent : e.target;
           actualTarget.position({
             x: Math.round(actualTarget.x() / blockSnapSize) * blockSnapSize,
-            y: Math.round(actualTarget.y() / blockSnapSize) * blockSnapSize
+            y: Math.round(actualTarget.y() / blockSnapSize) * blockSnapSize,
           });
           stage.batchDraw();
           return;
@@ -184,95 +185,28 @@ function addTransformer(stage,layer) {
     document.addEventListener('keydown', (event) => {
       if (event.key === 'r' || event.key === 'R') {
           const selectedShapes = transformer.nodes();
+          selectedShapes.forEach((shape) => {
+            const width = shape.width();
+            const height = shape.height();
+            const rotation = shape.rotation();
 
-          if (selectedShapes.length > 1) {
-              // Create a new Konva Group
-              const group = new Konva.Group();
-              // Add all selected shapes to the group
-              selectedShapes.forEach((shape) => {
-                  group.add(shape);
-              });
-              layer.add(group);
-              console.log(group);
-              // Perform the rotation on the group
-              //group.rotation(group.rotation() + 90);
+            // Save the current offsets
+            const offsetX = shape.offsetX();
+            const offsetY = shape.offsetY();
 
-              transformer.forceUpdate();
-              layer.batchDraw(); // Redraw the layer
-          } else {
-            selectedShapes.forEach((shape) => {
-              shape.offsetX(shape.width() / 2);
-              shape.offsetY(shape.height() / 2);
-              shape.rotation(shape.rotation() + 90); // Rotate 90 degrees clockwise
-            });
-          }
+            // Set the offsets to half of the width and height of the shape
+            shape.offsetX(width / 2);
+            //shape.offsetY(height / 2);
+
+            // Rotate 90 degrees clockwise
+            shape.rotation(rotation + 90);
+
+            // Reset the offsets
+            //shape.offsetX(offsetX);
+            //shape.offsetY(offsetY);
+          });
       }
-  });
-
-    /*
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'r' || event.key === 'R') {
-          // Calculate the center point of the selectionRectangle
-          let centerX = 0;
-          let centerY = 0;
-          let minX = 20000;
-          let maxX = 0;
-          let width = 0;
-          let minY = 20000;
-          let maxY = 0;
-          let height = 0;
-          // Check if there are selected shapes
-          const selectedShapes = transformer.nodes();
-          if (selectedShapes.length > 1) {
-            // Iterate through selected shapes and rotate each one
-            selectedShapes.forEach((shape) => {
-              const clientRect = shape.getClientRect();
-              console.log(clientRect);
-              if(clientRect.x < minX) {
-                minX = clientRect.x;
-              }
-              if (maxX < (clientRect.x + clientRect.width)) {
-                maxX = clientRect.x + clientRect.width;
-              }
-              if(clientRect.y < minY) {
-                minY = clientRect.y;
-              }
-              if (maxY < (clientRect.y + clientRect.height)) {
-                maxY = clientRect.y + clientRect.height;
-              }
-            });
-            width = maxX - minX;
-            height = maxY - minY;
-            centerX = minX + (width / 2);
-            centerY = minY + (height / 2);
-            // Draw the center circle
-            const center = new Konva.Circle({
-                x: centerX,
-                y: centerY,
-                radius: 5,
-                fill: 'red',
-            });
-            layer.add(center);
-            selectedShapes.forEach((shape) => {
-                const clientRect = shape.getClientRect();
-                shape.offsetX((shape.width() / 2) - centerX);
-                shape.offsetY((shape.width() / 2) - centerY);
-                shape.rotation(shape.rotation() + 90); // Rotate 90 degrees clockwise
-            });
-          } else {
-            selectedShapes.forEach((shape) => {
-                shape.offsetX(shape.width() / 2);
-                shape.offsetY(shape.height() / 2);
-                shape.rotation(shape.rotation() + 90); // Rotate 90 degrees clockwise
-            });
-          }
-
-          // Update the transformer to reflect the changes
-          transformer.forceUpdate();
-          layer.batchDraw(); // Redraw the layer
-        }
     });
-    */
     document.addEventListener('keydown', (event) => {
         if (event.key === 'h' || event.key === 'H') {
           // Check if there are selected shapes
@@ -364,10 +298,10 @@ function setPointDirection(group,switched) {
         const switchLine = new Konva.Path({
             stroke: 'green',
             strokeWidth: 2,
-            data: `M${30},${+ 50}
-                C${35 + 38},${45}
-                    ${point.width - 23},${10}
-                    ${point.width - 1},${10}`,
+            data: `M${30},${(blockSnapSize / 2) + blockSnapSize}
+                C${35 + 38},${(blockSnapSize / 2) + blockSnapSize - 7}
+                    ${point.width - 23},${(blockSnapSize / 2)}
+                    ${point.width - 1},${(blockSnapSize / 2)}`,
         });
         group.add(switchLine);
     } else {
@@ -375,7 +309,7 @@ function setPointDirection(group,switched) {
         const switchLine = new Konva.Line({
             stroke: 'green',
             strokeWidth: 2,
-            points: [30, 50, point.width, 50],
+            points: [30, (blockSnapSize / 2) + blockSnapSize, point.width, (blockSnapSize / 2) + blockSnapSize],
         });
         group.add(switchLine)
     }
@@ -409,8 +343,7 @@ function createPoint(point) {
     }
     const selector = new Konva.Rect({
         width: point.width,
-        height: point.width,
-        offsetY: 20,
+        height: point.height,
         name: 'selector',
     })
     group.add(selector);
@@ -422,28 +355,28 @@ function createPoint(point) {
         name: 'mainShape',
         sceneFunc: function (ctx, shape) {
             ctx.beginPath();
-            ctx.moveTo(0,45);
+            ctx.moveTo(0,blockSnapSize + (blockSnapSize / 2) - 5);
             // Left join
-            ctx.lineTo(20, 45);
+            ctx.lineTo(20, blockSnapSize + (blockSnapSize / 2) - 5);
             // Top right
-            ctx.bezierCurveTo(41+30, 45, point.width-30, 5, point.width,5);
+            ctx.bezierCurveTo(41+30, blockSnapSize + (blockSnapSize / 2) - 5, point.width-30, (blockSnapSize / 2) - 5, point.width,(blockSnapSize / 2) - 5);
             //ctx.lineTo(point.x + point.width, point.y);
             ctx.strokeShape(shape);
 
             ctx.beginPath();
             // Bottom left
-            ctx.moveTo(0, point.height);
+            ctx.moveTo(0, blockSnapSize + (blockSnapSize / 2) + 5);
             // Bottom right (lower)
-            ctx.lineTo(point.width,point.height);
+            ctx.lineTo(point.width,blockSnapSize + (blockSnapSize / 2) + 5);
             ctx.strokeShape(shape);
 
             ctx.beginPath();
             // Bottom right (upper)
-            ctx.moveTo(point.width, 45);
+            ctx.moveTo(point.width, blockSnapSize + (blockSnapSize / 2) - 5);
             // Right join
-            ctx.lineTo(56, 45);
+            ctx.lineTo(56, blockSnapSize + (blockSnapSize / 2) - 5);
             // Top right (lower)
-            ctx.bezierCurveTo(40+30, 45, point.width-15, 15, point.width, 15);
+            ctx.bezierCurveTo(40+30, blockSnapSize + (blockSnapSize / 2) - 5, point.width-15, (blockSnapSize / 2) + 5, point.width, (blockSnapSize / 2) + 5);
             // (!) Konva specific method, it is very important
             ctx.strokeShape(shape);
         }
@@ -451,7 +384,7 @@ function createPoint(point) {
 
     // Create a line with green stroke
     const entryLine = new Konva.Line({
-        points: [0, 50, 30, 50],
+        points: [0, (blockSnapSize / 2) + blockSnapSize, 30, (blockSnapSize / 2) + blockSnapSize],
         stroke: 'green',
         strokeWidth: 2,
         name: 'entryLine',
@@ -487,7 +420,7 @@ function createStrait(element) {
     }
     const selector = new Konva.Rect({
         width: element.width,
-        height: element.height,
+        height: blockSnapSize,
         name: 'selector',
     })
     group.add(selector);
@@ -499,11 +432,11 @@ function createStrait(element) {
         name: 'mainShape',
         sceneFunc: function (ctx, shape) {
             ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(element.width, 0);
+            ctx.moveTo(0, (blockSnapSize / 2) - 5);
+            ctx.lineTo(element.width, (blockSnapSize / 2) - 5);
 
-            ctx.moveTo(0, 10);
-            ctx.lineTo(element.width, 10);
+            ctx.moveTo(0, (blockSnapSize / 2) + 5);
+            ctx.lineTo(element.width, (blockSnapSize / 2) + 5);
 
             ctx.strokeShape(shape);
         }
@@ -559,13 +492,13 @@ function createSignal(signal) {
 // Function to add a new point
 function addPoint() {
     const point = {
-        x: 10,
-        y: 10,
-        width: 90,
-        height: 55,
+        x: blockSnapSize,
+        y: blockSnapSize,
+        width: blockSnapSize * 3,
+        height: blockSnapSize * 2,
         type: "point",
         name: "shape",
-        switched: false,
+        switched: true,
         draggable: true,
     };
     element = createPoint(point);
@@ -575,15 +508,15 @@ function addPoint() {
 }
 
 function addStrait(length) {
-    let width = 90;
+    let width = blockSnapSize * 2;
     if (length == "long") {
-        width = 180;
+        width = width * 2;
     }
     const striat = {
-        x:10,
-        y:10,
+        x:blockSnapSize,
+        y:blockSnapSize,
         width: width,
-        height: 10,
+        height: blockSnapSize,
         type: "strait",
         name: "shape",
         draggable: true,
