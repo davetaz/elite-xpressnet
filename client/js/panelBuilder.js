@@ -1,14 +1,16 @@
 let backgroundColor = "white";
+let panelId = "";
 let stage = {};
 let layer = {};
+let panelData = {};
 let transformer = {};
-let elements = [];
 var blockSnapSize = 37.5;
 // Call createKonvaStage when the page is fully loaded
 document.addEventListener("DOMContentLoaded", function () {
     stage = createKonvaStage();
     const layer = stage.getLayers()[0];
     addTransformer(stage,layer);
+    loadStage();
 });
 
 function createKonvaStage() {
@@ -47,7 +49,6 @@ function createKonvaStage() {
     return stage;
 }
 
-// Add the transformer
 function addTransformer(stage,layer) {
       transformer = new Konva.Transformer();
       layer.add(transformer);
@@ -326,6 +327,7 @@ function createPoint(point) {
         draggable: true,
         name: point.name,
         type: point.type,
+        save: true,
         switched: point.switched,
         vflip: point.vflip,
         hflip: point.hflip
@@ -392,11 +394,10 @@ function createPoint(point) {
     group.add(entryLine);
     group.add(mainShape);
     group = setPointDirection(group,point.switched);
-    console.log(group);
     return group;
 }
 
-function createStrait(element) {
+function createStraight(element) {
     let group = new Konva.Group({
         x: element.x,
         y: element.y,
@@ -406,6 +407,7 @@ function createStrait(element) {
         draggable: true,
         name: element.name,
         type: element.type,
+        save: true,
     });
     if (element.rotation) {
       group.rotation(element.rotation);
@@ -448,30 +450,55 @@ function createStrait(element) {
 }
 
 function createSignal(signal) {
+    signal.radius = 8;
     const group = new Konva.Group({
-        width: signal.width,
-        height: signal.height,
+        x: signal.x,
+        y: signal.y,
+        width: blockSnapSize,
+        height: blockSnapSize,
+        rotation: signal.rotation,
+        vflip: signal.vflip,
+        hflip: signal.hflip,
         draggable: true,
         name: signal.name,
         type: signal.type,
+        color: signal.color,
+        save: true,
     });
-
+    if (signal.rotation) {
+      group.rotation(signal.rotation);
+    }
+    if (signal.vflip) {
+      group.offsetY(group.height());
+      group.scaleY(-group.scaleY());
+    }
+    if (signal.hflip) {
+      group.offsetX(group.width());
+      group.scaleX(-group.scaleX());
+    }
     // Draw the signal's box (rectangle)
     const rect = new Konva.Rect({
-        x: signal.x,
-        y: signal.y,
-        width: signal.radius * 2.5,
-        height: signal.radius * 1.5,
-        stroke: 'gray', // Outline color for the box
-        strokeWidth: 1,
+        width: blockSnapSize,
+        height: blockSnapSize,
         name: 'selector',
     });
     group.add(rect);
+    // Draw the signal's box (rectangle)
+    const outline = new Konva.Rect({
+      x: blockSnapSize - (signal.radius * 2.5),
+      y: 0,
+      width: signal.radius * 2.5,
+      height: signal.radius * 1.5,
+      stroke: 'gray', // Outline color for the box
+      strokeWidth: 1,
+      name: 'outline',
+    });
+    group.add(outline);
 
     // Draw the left circle
     const leftCircle = new Konva.Circle({
-        x: signal.x + signal.radius / 2 + 2,
-        y: signal.y + signal.radius - 2,
+        x: (blockSnapSize / 2) + (signal.radius / 2),
+        y: (signal.radius / 2) + 2,
         radius: signal.radius / 2,
         fill: (signal.color == "red" || signal.color == "yellow" || signal.color == "dyellow") ? signal.color : '',
     });
@@ -479,8 +506,8 @@ function createSignal(signal) {
 
     // Draw the right circle
     const rightCircle = new Konva.Circle({
-        x: signal.x + signal.radius * 2 - 2,
-        y: signal.y + signal.radius / 2 + 2.2,
+        x: (blockSnapSize / 2) + (signal.radius * 2) - 3,
+        y: (signal.radius / 2) + 2.2,
         radius: signal.radius / 2,
         fill: (signal.color == "green" || signal.color == "dyellow") ? signal.color : '',
     });
@@ -489,7 +516,10 @@ function createSignal(signal) {
     return group;
 }
 
-// Function to add a new point
+function createControlPanel(connectedElement) {
+// TODO
+}
+
 function addPoint() {
     const point = {
         x: blockSnapSize,
@@ -504,10 +534,9 @@ function addPoint() {
     element = createPoint(point);
     layer.add(element);
     updateTransformer(stage);
-    elements.push(point);
 }
 
-function addStrait(length) {
+function addStraight(length) {
     let width = blockSnapSize * 2;
     if (length == "long") {
         width = width * 2;
@@ -517,24 +546,19 @@ function addStrait(length) {
         y:blockSnapSize,
         width: width,
         height: blockSnapSize,
-        type: "strait",
+        type: "straight",
         name: "shape",
         draggable: true,
     };
-    element = createStrait(striat);
+    element = createStraight(striat);
     layer.add(element);
     updateTransformer(stage);
-    elements.push(striat);
 }
 
 function addSignal(color) {
-    let radius = 8;
     const signal = {
-        x:0,          // X-coordinate of the signal's center
-        y:0,          // Y-coordinate of the signal's center
-        height: radius * 1.5,
-        width: radius * 2.5,
-        radius: radius,      // Radius of the signal
+        x:blockSnapSize,          // X-coordinate of the signal's center
+        y:blockSnapSize,          // Y-coordinate of the signal's center
         color: color,  // Color of the signal (you can change this)
         type: "signal",
         name: "shape",
@@ -542,43 +566,113 @@ function addSignal(color) {
     element = createSignal(signal);
     layer.add(element);
     updateTransformer(stage);
-    elements.push(signal);
+}
+
+function showLogMessage(message) {
+  const logElement = document.getElementById('log');
+  logElement.innerText = message;
+  setTimeout(() => {
+    logElement.innerText = ''; // Clear message after 5 seconds
+  }, 5000);
+}
+
+function addControlElement() {
+  const selectedShapes = transformer.nodes();
+  if (selectedShapes.length == 0) {
+    showLogMessage("ERROR: Please select a point or signal");
+    return;
+  }
+  if (selectedShapes.length > 1) {
+    showLogMessage("ERROR: More than one element selected");
+    return;
+  }
+  const element = selectedShapes[0];
+  if (element.attrs.type !== "point" && element.attrs.type !== "signal") {
+    showLogMessage("ERROR: No way of adding a controller for " + element.attrs.type);
+    return;
+  }
+  createControlPanel(element);
 }
 
 function saveStage() {
-  var json = stage.toJSON();
-  console.log(json);
-  localStorage.setItem('stageData', JSON.stringify(json));
+  panelData.elements = [];
+  layer.children.forEach(function(shapeData) {
+    if (shapeData.attrs.save) {
+      panelData.elements.push(shapeData.attrs);
+    }
+  });
+  // Check if panelId is not null or undefined
+  if (panelId) {
+    // Get the server from localStorage
+    const server = localStorage.getItem('dctDCC-Server');
+
+    // Make a PUT request to update panel data
+    fetch(`//${server}/panel/${panelId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(panelData),
+      })
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
+          }
+          return response.json();
+      })
+      .then(data => {
+        showLogMessage('Panel data updated successfully');
+      })
+      .catch(error => {
+          showLogMessage(`Error updating panel data: ${error}`);
+      });
+  } else {
+      // Show error message if panelId is not found in the URL
+      showLogMessage(`Panel ID not found in the URL`);
+  }
+}
+
+function getQueryParam(name) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(name);
 }
 
 function loadStage() {
-  var savedData = localStorage.getItem('stageData');
-  if (savedData) {
-    var stageData = JSON.parse(JSON.parse(savedData));
+  // Get the panelId query parameter from the URL
+  panelId = getQueryParam('panelId');
 
-    // Clear existing children of the layer
-    //layer.destroyChildren();
+  // Check if panelId is not null or undefined
+  if (panelId) {
+      // Get the server from localStorage
+      const server = localStorage.getItem('dctDCC-Server');
 
-    // Iterate over each layer in the saved JSON data
-    stageData.children.forEach(function(layerData) {
-      // Iterate over each shape in the layer data
-      layerData.children.forEach(function(shapeData) {
-        // Create a new shape with the shape data
-        if (shapeData.attrs.type == "point") {
-          var point = createPoint(shapeData.attrs);
-          layer.add(point);
-        }
-        if (shapeData.attrs.type == "strait") {
-          var element = createStrait(shapeData.attrs);
-          layer.add(element);
-        }
+      // Make a GET request using panelId and server
+      $.get(`//${server}/panel/${panelId}`, function (data) {
+          // Handle the response data here
+          panelData = data;
+          if (panelData.elements) {
+            const elements = panelData.elements;
+            elements.forEach(function(shapeData) {
+              // Create a new shape with the shape data
+              if (shapeData.type == "point") {
+                var point = createPoint(shapeData);
+                layer.add(point);
+              }
+              if (shapeData.type == "straight") {
+                var element = createStraight(shapeData);
+                layer.add(element);
+              }
+              if (shapeData.type == "signal") {
+                var element = createSignal(shapeData);
+                layer.add(element);
+              }
+            });
+            // Draw the layer
+            layer.draw();
+            updateTransformer(stage);
+          }
       });
-    });
-
-    // Draw the layer
-    layer.draw();
-    updateTransformer(stage);
   } else {
-    console.log("No saved data found.");
+      console.error('No saved data found');
   }
 }
