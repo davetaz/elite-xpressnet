@@ -5,6 +5,7 @@ let layer = {};
 let panelData = {};
 let transformer = {};
 var blockSnapSize = 37.5;
+var controllers = [];
 // Call createKonvaStage when the page is fully loaded
 document.addEventListener("DOMContentLoaded", function () {
     stage = createKonvaStage();
@@ -12,6 +13,30 @@ document.addEventListener("DOMContentLoaded", function () {
     addTransformer(stage,layer);
     loadStage();
 });
+
+function generateGUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0,
+          v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+  });
+}
+
+function findElementById(layer, id) {
+  var foundElement = null;
+
+  // Iterate through all children of the stage's layer
+  layer.children.forEach(function(group) {
+      // Check if the ID matches
+      if (group.id() === id) {
+          foundElement = group;
+          // Exit loop if found
+          return false;
+      }
+  });
+
+  return foundElement;
+}
 
 function createKonvaStage() {
     const stage = new Konva.Stage({
@@ -319,6 +344,7 @@ function setPointDirection(group,switched) {
 
 function createPoint(point) {
     let group = new Konva.Group({
+        id: point.id || generateGUID(),
         x: point.x,
         y: point.y,
         rotation: point.rotation,
@@ -399,6 +425,7 @@ function createPoint(point) {
 
 function createStraight(element) {
     let group = new Konva.Group({
+        id: element.id || generateGUID(),
         x: element.x,
         y: element.y,
         rotation: element.rotation,
@@ -452,6 +479,7 @@ function createStraight(element) {
 function createSignal(signal) {
     signal.radius = 8;
     const group = new Konva.Group({
+        id: signal.id || generateGUID(),
         x: signal.x,
         y: signal.y,
         width: blockSnapSize,
@@ -516,8 +544,44 @@ function createSignal(signal) {
     return group;
 }
 
-function createControlPanel(connectedElement) {
-// TODO
+function createControlPanel(element) {
+  let ID = generateGUID();
+  let width = blockSnapSize * 6;
+  let height = blockSnapSize * 2;
+  const connectedElement = findElementById(layer,element.connectedElement);
+  if (connectedElement.attrs.type === "signal") {
+    height = blockSnapSize * 3;
+  }
+  const group = new Konva.Group({
+    id: ID,
+    x: element.x,
+    y: element.y,
+    width: width,
+    height: height,
+    draggable: true,
+    name: element.name,
+    type: element.type,
+    connectedElement: element.connectedElement,
+    save: true,
+  });
+  const rect = new Konva.Rect({
+    width: width,
+    height: height,
+    stroke: 'gray',
+    fill: 'gray',
+    strokeWidth: 2
+  })
+  group.add(rect);
+  let text = new Konva.Text({
+    text: `Control panel for ${connectedElement.attrs.type} ${connectedElement.attrs.id.split('-').pop()}`, // Get the last part of the GUID
+    fontSize: 12,
+    fill: 'black',
+    align: 'center',
+    width: width
+  });
+  group.add(text);
+  controllers.push(ID);
+  return group;
 }
 
 function addPoint() {
@@ -586,12 +650,21 @@ function addControlElement() {
     showLogMessage("ERROR: More than one element selected");
     return;
   }
-  const element = selectedShapes[0];
-  if (element.attrs.type !== "point" && element.attrs.type !== "signal") {
-    showLogMessage("ERROR: No way of adding a controller for " + element.attrs.type);
+  const connectedElement = selectedShapes[0];
+  if (connectedElement.attrs.type !== "point" && connectedElement.attrs.type !== "signal") {
+    showLogMessage("ERROR: No way of adding a controller for " + connectedElement.attrs.type);
     return;
   }
-  createControlPanel(element);
+  const cp = {
+    x:blockSnapSize,          // X-coordinate of the signal's center
+    y:blockSnapSize,          // Y-coordinate of the signal's center
+    type: "controlPanel",
+    name: "shape",
+    connectedElement: connectedElement.attrs.id
+  };
+  element = createControlPanel(cp);
+  layer.add(element);
+  updateTransformer(stage);
 }
 
 function saveStage() {
@@ -666,6 +739,10 @@ function loadStage() {
                 var element = createSignal(shapeData);
                 layer.add(element);
               }
+              if (shapeData.type == "controlPanel") {
+                var element = createControlPanel(shapeData);
+                layer.add(element);
+              }
             });
             // Draw the layer
             layer.draw();
@@ -674,5 +751,20 @@ function loadStage() {
       });
   } else {
       console.error('No saved data found');
+  }
+}
+
+function renderControllers() {
+  const id = controllers[0];
+  const element = findElementById(layer, id);
+  if (element) {
+      const controllerHTML = `
+          <controller id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px;">
+              <p style="padding: 0; margin: 0;">Point: ${element.id()}</p>
+          </controller>
+      `;
+      document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
+  } else {
+      console.error('Element not found');
   }
 }
