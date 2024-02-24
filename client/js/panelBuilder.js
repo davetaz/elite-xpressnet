@@ -197,16 +197,13 @@ function addTransformer(stage,layer) {
     });
     // Attach a double-click event listener to the shape
     stage.on('dblclick', function() {
-      //switch the point
-      /*
-      if (point.switched) {
-          point.switched = false;
-      } else {
-          point.switched = true;
+      const selectedShapes = transformer.nodes();
+      if (selectedShapes.length == 1) {
+        const element = selectedShapes[0];
+        if (element.attrs.type == "point") {
+          switchPoint(element.attrs.id);
+        }
       }
-      setPointDirection(element,point);
-      layer.batchDraw();
-      */
     });
     document.addEventListener('keydown', (event) => {
       if (event.key === 'r' || event.key === 'R') {
@@ -318,6 +315,7 @@ function setPointDirection(group,switched) {
     group.add(selector);
     group.add(mainShape);
     group.add(entryLine);
+    console.log("Set point direction");
 
     if (switched) {
         point.switched = true;
@@ -476,9 +474,28 @@ function createStraight(element) {
     return group; // or return shape; if you don't need it inside a group
 }
 
+function setSignalColor(signalGroup, color) {
+  const leftCircle = signalGroup.findOne('.leftCircle');
+  const rightCircle = signalGroup.findOne('.rightCircle');
+
+  // Update fill color based on the provided color
+  if (color === "dyellow") {
+      leftCircle.fill("yellow");
+      rightCircle.fill("yellow");
+  } else {
+      rightCircle.fill((color === "red" || color === "yellow") ? color : '');
+      leftCircle.fill((color === "green") ? color : '');
+  }
+
+  // Update the color attribute
+  signalGroup.attrs.color = color;
+
+  return signalGroup;
+}
+
 function createSignal(signal) {
     signal.radius = 8;
-    const group = new Konva.Group({
+    var group = new Konva.Group({
         id: signal.id || generateGUID(),
         x: signal.x,
         y: signal.y,
@@ -525,21 +542,27 @@ function createSignal(signal) {
 
     // Draw the left circle
     const leftCircle = new Konva.Circle({
+        name: 'leftCircle',
         x: (blockSnapSize / 2) + (signal.radius / 2),
         y: (signal.radius / 2) + 2,
         radius: signal.radius / 2,
+        fill: '',
         fill: (signal.color == "red" || signal.color == "yellow" || signal.color == "dyellow") ? signal.color : '',
     });
     group.add(leftCircle);
 
     // Draw the right circle
     const rightCircle = new Konva.Circle({
+        name: 'rightCircle',
         x: (blockSnapSize / 2) + (signal.radius * 2) - 3,
         y: (signal.radius / 2) + 2.2,
         radius: signal.radius / 2,
+        fill: '',
         fill: (signal.color == "green" || signal.color == "dyellow") ? signal.color : '',
     });
     group.add(rightCircle);
+
+    group = setSignalColor(group,signal.color);
 
     return group;
 }
@@ -549,9 +572,6 @@ function createControlPanel(element) {
   let width = blockSnapSize * 6;
   let height = blockSnapSize * 2;
   const connectedElement = findElementById(layer,element.connectedElement);
-  if (connectedElement.attrs.type === "signal") {
-    height = blockSnapSize * 3;
-  }
   const group = new Konva.Group({
     id: ID,
     x: element.x,
@@ -754,17 +774,108 @@ function loadStage() {
   }
 }
 
-function renderControllers() {
-  const id = controllers[0];
+function switchPoint(id) {
   const element = findElementById(layer, id);
   if (element) {
-      const controllerHTML = `
-          <controller id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px;">
-              <p style="padding: 0; margin: 0;">Point: ${element.id()}</p>
-          </controller>
-      `;
-      document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
+    element.attrs.switched = !element.attrs.switched;
+    setPointDirection(element, element.attrs.switched);
+    saveStage();
   } else {
-      console.error('Element not found');
+    console.error(`Element with id ${id} not found`);
+  }
+}
+
+function setPointState(id, state) {
+  const element = findElementById(layer, id);
+  if (element) {
+      if (state === "normal" || state === "switched") {
+          element.attrs.switched = (state === "switched");
+          setPointDirection(element, element.attrs.switched);
+          saveStage();
+      } else {
+          console.error('Invalid state provided');
+      }
+  } else {
+      console.error(`Element with id ${id} not found`);
+  }
+}
+
+function changeSignal(id,color) {
+  const element = findElementById(layer, id);
+  if (element) {
+    setSignalColor(element,color);
+    saveStage();
+  } else {
+    console.error(`Element with id ${id} not found`);
+  }
+}
+
+function hideControllers() {
+  for (var i = 0; i < controllers.length; i++) {
+      var id = controllers[i];
+      var controller = document.getElementById(id);
+      if (controller) {
+          controller.style.display = 'none';
+      }
+  }
+}
+
+function renderControllers() {
+  for(var i=0;i<controllers.length;i++) {
+    id = controllers[i];
+    if (document.getElementById(id)) {
+      var controller = document.getElementById(id);
+      controller.style.display = 'block';
+    } else {
+      const element = findElementById(layer, id);
+      if (element) {
+        const connectedElement = findElementById(layer, element.attrs.connectedElement);
+        if (connectedElement.attrs.type === "point") {
+          const controllerHTML = `
+            <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
+              <p style="padding: 0; margin: 0;">${connectedElement.attrs.type}: ${connectedElement.attrs.id.split('-').pop()}</p>
+              <button onclick="setPointState('${connectedElement.attrs.id}','normal')">Normal</button>
+              <button onclick="setPointState('${connectedElement.attrs.id}','switched')">Switched</button>
+            </div>
+          `;
+          document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
+        }
+        if (connectedElement.attrs.type === "signal") {
+          const controllerHTML = `
+            <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
+              <p style="padding: 0; margin: 0;">${connectedElement.attrs.type}: ${connectedElement.attrs.id.split('-').pop()}</p>
+              <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','red')">
+                  <svg width="20" height="26">
+                      <!-- Red signal icon -->
+                      <circle cx="10" cy="6" r="6" fill="red" />
+                  </svg>
+              </button>
+              <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','yellow')">
+                  <svg width="20" height="26">
+                      <!-- Yellow signal icon -->
+                      <circle cx="10" cy="6" r="6" fill="yellow" />
+                  </svg>
+              </button>
+              <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','dyellow')">
+                  <svg width="20" height="26">
+                      <!-- Double yellow signal icon -->
+                      <circle cx="10" cy="6" r="6" fill="yellow" />
+                      <circle cx="10" cy="20" r="6" fill="yellow" />
+                  </svg>
+              </button>
+              <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','green')">
+                    <svg width="20" height="26">
+                      <!-- Green signal icon -->
+                      <circle cx="10" cy="20" r="6" fill="green" />
+                  </svg>
+              </button>
+            </div>
+          `;
+          document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
+        }
+      } else {
+        console.error('Element not found');
+      }
+    }
   }
 }
