@@ -604,6 +604,21 @@ function createControlPanel(element) {
   return group;
 }
 
+function createConnector(element1,element2) {
+  const ID = "connector-" + element1.attrs.id;
+  const line = new Konva.Line({
+    id: ID,
+    stroke: 'gray',
+    strokeWidth: 2,
+    dash: [5, 5]
+  });
+
+  line.points([element1.x() + (element1.width() / 2), element1.y() + (element1.height() / 2), element2.x() + (element2.width() / 2), element2.y() + (element2.height() / 2)]);
+  console.log(line);
+  layer.add(line);
+  layer.batchDraw();
+}
+
 function addPoint() {
     const point = {
         x: blockSnapSize,
@@ -877,5 +892,29 @@ function renderControllers() {
         console.error('Element not found');
       }
     }
+  }
+}
+
+function showConnectors() {
+  for(var i=0;i<controllers.length;i++) {
+    id = "connector-" + controllers[i];
+    const connector = findElementById(layer, id);
+    const element1 = findElementById(layer, controllers[i]);
+    const element2 = findElementById(layer,element1.attrs.connectedElement);
+    if (connector) {
+      connector.points([element1.x() + (element1.width() / 2), element1.y() + (element1.height() / 2), element2.x() + (element2.width() / 2), element2.y() + (element2.height() / 2)]);
+    } else {
+      createConnector(element1,element2);
+    }
+  }
+}
+
+function hideConnectors() {
+  for (var i = 0; i < controllers.length; i++) {
+      var id = "connector-" + controllers[i];
+      const connector = findElementById(layer, id);
+      if (connector) {
+          connector.remove();
+      }
   }
 }
