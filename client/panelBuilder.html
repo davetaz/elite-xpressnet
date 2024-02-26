@@ -9,8 +9,14 @@
         <title>Layout builder</title>
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
         <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
         <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+
+        <script type="text/javascript" src="js/underscore.js"></script>
+        <script type="text/javascript" src="js/jquery-ui.js"></script>
+        <script type="text/javascript" src="js/jsv.js"></script>
+        <script type="text/javascript" src="js/jsonform.js"></script>
 
         <link rel="stylesheet" href="style/main.css">
         <link rel="stylesheet" href="style/panelBuilder.css">
@@ -21,7 +27,8 @@
     </nav>
 
     <section class="content">
-        <div id="trackCanvas" style="width:1024px; height:600px; display: inline-block; position: relative;"></div>
+        <div id="trackCanvas" style="width:1024px; height:600px; display: inline-block; position: relative;">
+        </div>
         <buttons style="vertical-align: top; width: 200px; height: 400px; display: inline-block;">
             <button id="addLHup" onclick="addPoint()">Add Point</button>
             <button id="addStraightShort" onclick="addStraight('short')">Add Straight (short)</button>
@@ -35,6 +42,18 @@
             <button id="savePanel" onclick="saveStage()">Save panel</button><br/>
         </buttons>
     </section>
+
+    <template id="popupTemplate">
+        <div class="popup-overlay" style="position: absolute; top: 20px; left: 20px; width: calc(100% - 40px); height: calc(100% - 40px); background-color: rgba(0, 0, 0, 0.9); z-index: 9999;">
+            <button id="closeButton" style="position: absolute; top: 10px; right: 10px; z-index: 1000;">X</button>
+            <div class="popup-content" style="position: absolute; padding: 20px; border-radius: 5px; width: inherit;">
+                <h2>Configure Element</h2>
+                <input type="hidden" id="elementId"></input>
+                <form id="configureElementForm">
+                </form>
+            </div>
+        </div>
+    </template>
 
     <footer id="footer" class="footer">
         <div id="log" class="log"></div>

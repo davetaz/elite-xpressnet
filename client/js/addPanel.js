@@ -6,7 +6,7 @@ function setupaddPanel(data) {
     $('#panelRes').html("");
     $('form').show();
 
-      // Fetch the schema from "schemas/trains.json"
+    // Fetch the schema from "schemas/panels.json"
     fetch('schemas/panels.json')
       .then(response => response.json())
       .then(schema => {

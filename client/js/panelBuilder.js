@@ -825,16 +825,6 @@ function changeSignal(id,color) {
   }
 }
 
-function hideControllers() {
-  for (var i = 0; i < controllers.length; i++) {
-      var id = controllers[i];
-      var controller = document.getElementById(id);
-      if (controller) {
-          controller.style.display = 'none';
-      }
-  }
-}
-
 function renderControllers() {
   for(var i=0;i<controllers.length;i++) {
     id = controllers[i];
@@ -848,6 +838,9 @@ function renderControllers() {
         if (connectedElement.attrs.type === "point") {
           const controllerHTML = `
             <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
+              <button onclick="configureElement('${connectedElement.attrs.id}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
+              <i class="fas fa-cog"></i>
+          </button>
               <p style="padding: 0; margin: 0;">${connectedElement.attrs.type}: ${connectedElement.attrs.id.split('-').pop()}</p>
               <button onclick="setPointState('${connectedElement.attrs.id}','normal')">Normal</button>
               <button onclick="setPointState('${connectedElement.attrs.id}','switched')">Switched</button>
@@ -895,6 +888,16 @@ function renderControllers() {
   }
 }
 
+function hideControllers() {
+  for (var i = 0; i < controllers.length; i++) {
+      var id = controllers[i];
+      var controller = document.getElementById(id);
+      if (controller) {
+          controller.style.display = 'none';
+      }
+  }
+}
+
 function showConnectors() {
   for(var i=0;i<controllers.length;i++) {
     id = "connector-" + controllers[i];
@@ -917,4 +920,47 @@ function hideConnectors() {
           connector.remove();
       }
   }
+}
+
+function configureElement(elementId) {
+  // Get the popup template
+  const popupTemplate = document.getElementById('popupTemplate');
+
+  // Clone the template content
+  const popupContent = popupTemplate.content.cloneNode(true);
+
+  // Set the elementId in the cloned template
+  const clonedElementIdInput = popupContent.querySelector('#elementId');
+  if (clonedElementIdInput) {
+    clonedElementIdInput.value = elementId; // Set the value of the input field to the elementId
+  }
+  var data = {};
+  // Fetch the schema from "schemas/panels.json"
+  fetch('schemas/panels.json')
+  .then(response => response.json())
+  .then(schema => {
+      $('#configureElementForm').jsonForm({
+          schema: schema,
+          value: data,
+          onSubmit: function (errors, values) {
+              if (errors) {
+                  $('#panelRes').html('<p>Please correct the errors in your form</p>');
+              } else {
+                  var inputObject = values;
+                  sendPanelDataToServer(inputObject);
+              }
+          }
+      });
+  })
+  .catch(error => {
+      console.error("Error fetching schema:", error);
+  });
+
+  // Add event listener for Close button
+  popupContent.querySelector('#closeButton').addEventListener('click', function() {
+    document.getElementsByClassName('popup-overlay')[0].remove();
+  });
+
+  // Append the popup content to the trackCanvas div
+  document.getElementById('trackCanvas').appendChild(popupContent);
 }
