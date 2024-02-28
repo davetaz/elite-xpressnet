@@ -19,6 +19,7 @@
         <script type="text/javascript" src="js/jsonform.js"></script>
 
         <link rel="stylesheet" href="style/main.css">
+        <link rel="stylesheet" href="style/buttons.css">
         <link rel="stylesheet" href="style/panelBuilder.css">
     </head>
 <body>
@@ -44,12 +45,12 @@
     </section>
 
     <template id="popupTemplate">
-        <div class="popup-overlay" style="position: absolute; top: 20px; left: 20px; width: calc(100% - 40px); height: calc(100% - 40px); background-color: rgba(0, 0, 0, 0.9); z-index: 9999;">
+        <div class="popup-overlay" style="position: absolute; top: 20px; left: 20px; width: calc(100% - 40px); height: calc(100% - 40px); background-color: rgba(0, 0, 0, 0.9); z-index: 9999; max-height: calc(100% - 40px); overflow-y: scroll;">
             <button id="closeButton" style="position: absolute; top: 10px; right: 10px; z-index: 1000;">X</button>
             <div class="popup-content" style="position: absolute; padding: 20px; border-radius: 5px; width: inherit;">
-                <h2>Configure Element</h2>
-                <input type="hidden" id="elementId"></input>
-                <form id="configureElementForm">
+                <div id="res" class="alert"></div>
+                <h2>Configure <span id="elementType"></span></h2>
+                <form id="configureElementForm" method="">
                 </form>
             </div>
         </div>

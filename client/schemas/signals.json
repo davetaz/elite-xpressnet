@@ -1,0 +1,35 @@
+{
+    "_id": {
+      "type": "hidden"
+    },
+    "Name": {
+      "type": "string",
+      "maxLength": 20,
+      "title": "Name (required)",
+      "required": true
+    },
+    "Aspects": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "Colour": {
+                "type": "string",
+                "enum": ["", "Red", "Amber", "Green", "Amber (second)"],
+                "title": "Colour"
+              },
+            "DCCNumber": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9999,
+                "title": "DCC accessory number"
+            },
+            "Aspect direction": {
+              "type": "string",
+              "enum": ["", "Forward", "Reverse"],
+              "title": "DCC Direction"
+            }
+          }
+        }
+    }
+}

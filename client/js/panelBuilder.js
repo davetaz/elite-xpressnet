@@ -839,8 +839,8 @@ function renderControllers() {
           const controllerHTML = `
             <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
               <button onclick="configureElement('${connectedElement.attrs.id}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
-              <i class="fas fa-cog"></i>
-          </button>
+                <i class="fas fa-cog"></i>
+              </button>
               <p style="padding: 0; margin: 0;">${connectedElement.attrs.type}: ${connectedElement.attrs.id.split('-').pop()}</p>
               <button onclick="setPointState('${connectedElement.attrs.id}','normal')">Normal</button>
               <button onclick="setPointState('${connectedElement.attrs.id}','switched')">Switched</button>
@@ -851,6 +851,9 @@ function renderControllers() {
         if (connectedElement.attrs.type === "signal") {
           const controllerHTML = `
             <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
+              <button onclick="configureElement('${connectedElement.attrs.id}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
+                <i class="fas fa-cog"></i>
+              </button>
               <p style="padding: 0; margin: 0;">${connectedElement.attrs.type}: ${connectedElement.attrs.id.split('-').pop()}</p>
               <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','red')">
                   <svg width="20" height="26">
@@ -922,32 +925,44 @@ function hideConnectors() {
   }
 }
 
+function saveElementData(elementId,values) {
+  const element = findElementById(layer, elementId);
+  delete values._id;
+  element.attrs.config = values;
+  $('#res').html('<p>' + element.attrs.type + ' updated</p>');
+  saveStage();
+}
+
 function configureElement(elementId) {
+  const element = findElementById(layer, elementId);
   // Get the popup template
   const popupTemplate = document.getElementById('popupTemplate');
 
   // Clone the template content
   const popupContent = popupTemplate.content.cloneNode(true);
 
-  // Set the elementId in the cloned template
-  const clonedElementIdInput = popupContent.querySelector('#elementId');
-  if (clonedElementIdInput) {
-    clonedElementIdInput.value = elementId; // Set the value of the input field to the elementId
+  // NOT WORKING
+  $('#elementType').html(element.attrs.type);
+
+  var schema = 'schemas/points.json';
+  if (element.attrs.type == "signal") {
+      schema = 'schemas/signals.json';
   }
   var data = {};
-  // Fetch the schema from "schemas/panels.json"
-  fetch('schemas/panels.json')
+  data._id = elementId;
+  fetch(schema)
   .then(response => response.json())
   .then(schema => {
+      $('#elementType').html(element.attrs.type);
       $('#configureElementForm').jsonForm({
           schema: schema,
           value: data,
           onSubmit: function (errors, values) {
               if (errors) {
-                  $('#panelRes').html('<p>Please correct the errors in your form</p>');
+                  $('#res').html('<p>Please correct the errors in your form</p>');
               } else {
                   var inputObject = values;
-                  sendPanelDataToServer(inputObject);
+                  saveElementData(elementId,inputObject);
               }
           }
       });
