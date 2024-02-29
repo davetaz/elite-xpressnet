@@ -77,9 +77,9 @@ function createKonvaStage() {
 function addTransformer(stage,layer) {
       transformer = new Konva.Transformer();
       layer.add(transformer);
-      var shapes = stage.find('.shape');
+      //var shapes = stage.find('.shape');
       // by default select all shapes
-      transformer.nodes(shapes);
+      //transformer.nodes(shapes);
       transformer.rotationSnaps([0, 90, 180, 270]);
       transformer.resizeEnabled(false);
 
@@ -166,13 +166,18 @@ function addTransformer(stage,layer) {
         return;
         }
 
+        var actualTarget = e.target;
+        while (actualTarget.parent && !actualTarget.hasName('shape')) {
+          actualTarget = actualTarget.parent;
+        }
         // Check if e.target has the name 'shape' or 'child'
-        if (!e.target.hasName('shape') && !e.target.hasName('selector')) {
-        return;
+        if (!actualTarget.hasName('shape')) {
+        //if (!e.target.hasName('shape') && !e.target.hasName('selector')) {
+          return;
         }
 
         // Get the actual target based on the name
-        const actualTarget = e.target.hasName('selector') ? e.target.parent : e.target;
+        //var actualTarget = e.target.hasName('selector') ? e.target.parent : e.target;
 
         // do we pressed shift or ctrl?
         const metaPressed = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
@@ -301,11 +306,6 @@ function addTransformer(stage,layer) {
     });
 }
 
-function updateTransformer(stage) {
-    var shapes = stage.find('.shape');
-    transformer.nodes(shapes);
-}
-
 function setPointDirection(group,switched) {
     var point = group.attrs;
     const mainShape = group.findOne('.mainShape');
@@ -341,7 +341,6 @@ function setPointDirection(group,switched) {
 }
 
 function createPoint(point) {
-  console.log(point);
     let group = new Konva.Group({
         id: point.id || generateGUID(),
         x: point.x,
@@ -618,7 +617,6 @@ function createConnector(element1,element2) {
   });
 
   line.points([element1.x() + (element1.width() / 2), element1.y() + (element1.height() / 2), element2.x() + (element2.width() / 2), element2.y() + (element2.height() / 2)]);
-  console.log(line);
   layer.add(line);
   layer.batchDraw();
 }
@@ -636,7 +634,6 @@ function addPoint() {
     };
     element = createPoint(point);
     layer.add(element);
-    updateTransformer(stage);
 }
 
 function addStraight(length) {
@@ -655,7 +652,6 @@ function addStraight(length) {
     };
     element = createStraight(striat);
     layer.add(element);
-    updateTransformer(stage);
 }
 
 function addSignal(color) {
@@ -668,7 +664,6 @@ function addSignal(color) {
     };
     element = createSignal(signal);
     layer.add(element);
-    updateTransformer(stage);
 }
 
 function showLogMessage(message) {
@@ -703,7 +698,6 @@ function addControlElement() {
   };
   element = createControlPanel(cp);
   layer.add(element);
-  updateTransformer(stage);
 }
 
 function saveStage() {
@@ -785,7 +779,6 @@ function loadStage() {
             });
             // Draw the layer
             layer.draw();
-            updateTransformer(stage);
           }
       });
   } else {
@@ -854,7 +847,7 @@ function renderControllers() {
           }
           const controllerHTML = `
             <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
-              <button onclick="configureElement('${connectedElement.attrs.id}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
+              <button onclick="configureElement('${connectedElement.attrs.id}','${element.id()}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
                 <i class="fas fa-cog"></i>
               </button>
               <p style="padding: 0; margin: 0;">${elementName}</p>
@@ -865,39 +858,17 @@ function renderControllers() {
           document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
         }
         if (connectedElement.attrs.type === "signal") {
-          const controllerHTML = `
+          const config = connectedElement.attrs.config;
+
+          var controllerHTML = `
             <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
-              <button onclick="configureElement('${connectedElement.attrs.id}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
+              <button onclick="configureElement('${connectedElement.attrs.id}','${element.id()}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
                 <i class="fas fa-cog"></i>
               </button>
-              <p style="padding: 0; margin: 0;">${elementName}</p>
-              <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','red')">
-                  <svg width="20" height="26">
-                      <!-- Red signal icon -->
-                      <circle cx="10" cy="20" r="6" fill="red" />
-                  </svg>
-              </button>
-              <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','yellow')">
-                  <svg width="20" height="26">
-                      <!-- Yellow signal icon -->
-                      <circle cx="10" cy="20" r="6" fill="yellow" />
-                  </svg>
-              </button>
-              <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','dyellow')">
-                  <svg width="20" height="26">
-                      <!-- Double yellow signal icon -->
-                      <circle cx="10" cy="6" r="6" fill="yellow" />
-                      <circle cx="10" cy="20" r="6" fill="yellow" />
-                  </svg>
-              </button>
-              <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','green')">
-                    <svg width="20" height="26">
-                      <!-- Green signal icon -->
-                      <circle cx="10" cy="20" r="6" fill="green" />
-                  </svg>
-              </button>
-            </div>
-          `;
+              <p style="padding: 0; margin: 0;">${elementName}</p>`;
+
+          controllerHTML += generateSignalButtons(config,connectedElement.attrs.id) + "</div>";
+
           document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
         }
       } else {
@@ -905,6 +876,62 @@ function renderControllers() {
       }
     }
   }
+}
+
+function generateSignalButtons(config,id) {
+  const buttons = [];
+  if (!config) {
+    config = {
+      "Aspects": [
+        {"Colour": "Red"},
+        {"Colour": "Amber"},
+        {"Colour": "Amber (second)"},
+        {"Colour": "Green"}
+      ]
+    }
+  }
+  // Define the order of colors
+  const colorOrder = ['Red', 'Amber', 'Amber (second)', 'Green'];
+  const aspects = config.Aspects;
+  //NEED TO BE IN ORDER
+  colorOrder.forEach(color => {
+    aspects.forEach(aspect => {
+      if (aspect.Colour === color) {
+        if (color === 'Red') {
+          buttons.push(`<button style="padding: 10px;" onclick="changeSignal('${id}','red')">
+                        <svg width="20" height="26">
+                            <!-- Red signal icon -->
+                            <circle cx="10" cy="20" r="6" fill="red" />
+                        </svg>
+                    </button>`);
+        } else if (color === 'Amber') {
+          buttons.push(`<button style="padding: 10px;" onclick="changeSignal('${id}','yellow')">
+                      <svg width="20" height="26">
+                          <!-- Yellow signal icon -->
+                          <circle cx="10" cy="20" r="6" fill="yellow" />
+                      </svg>
+                    </button>`);
+        } else if (aspect.Colour === 'Amber (second)') {
+          buttons.push(`<button style="padding: 10px;" onclick="changeSignal('${id}','dyellow')">
+                      <svg width="20" height="26">
+                          <!-- Double yellow signal icon -->
+                          <circle cx="10" cy="6" r="6" fill="yellow" />
+                          <circle cx="10" cy="20" r="6" fill="yellow" />
+                      </svg>
+                    </button>`);
+        } else if (aspect.Colour === 'Green') {
+          buttons.push(`<button style="padding: 10px;" onclick="changeSignal('${id}','green')">
+                      <svg width="20" height="26">
+                        <!-- Green signal icon -->
+                        <circle cx="10" cy="20" r="6" fill="green" />
+                    </svg>
+                  </button>`);
+        }
+      }
+    });
+  });
+  return buttons.join('');
+
 }
 
 function hideControllers() {
@@ -949,7 +976,10 @@ function saveElementData(elementId,values) {
   saveStage();
 }
 
-function configureElement(elementId) {
+function configureElement(elementId,controllerID) {
+  //Make sure no nodes are selected before typing on keyboard!
+  transformer.nodes([]);
+  const controller = document.getElementById(controllerID);
   const element = findElementById(layer, elementId);
 
   // Get the popup template
@@ -965,7 +995,6 @@ function configureElement(elementId) {
   if (element.attrs.type == "signal") {
       schema = 'schemas/signals.json';
   }
-  console.log(element);
   var data = element.attrs.config || {};
   data._id = elementId;
   fetch(schema)
@@ -979,8 +1008,11 @@ function configureElement(elementId) {
               if (errors) {
                   $('#res').html('<p>Please correct the errors in your form</p>');
               } else {
+                  controller.remove();
                   var inputObject = values;
                   saveElementData(elementId,inputObject);
+                  renderControllers();
+                  document.getElementsByClassName('popup-overlay')[0].remove();
               }
           }
       });
