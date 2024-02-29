@@ -341,6 +341,7 @@ function setPointDirection(group,switched) {
 }
 
 function createPoint(point) {
+  console.log(point);
     let group = new Konva.Group({
         id: point.id || generateGUID(),
         x: point.x,
@@ -354,7 +355,8 @@ function createPoint(point) {
         save: true,
         switched: point.switched,
         vflip: point.vflip,
-        hflip: point.hflip
+        hflip: point.hflip,
+        config: point.config
     })
     if (point.rotation) {
       group.rotation(point.rotation);
@@ -433,6 +435,7 @@ function createStraight(element) {
         name: element.name,
         type: element.type,
         save: true,
+        config: element.config
     });
     if (element.rotation) {
       group.rotation(element.rotation);
@@ -483,8 +486,8 @@ function setSignalColor(signalGroup, color) {
       leftCircle.fill("yellow");
       rightCircle.fill("yellow");
   } else {
-      rightCircle.fill((color === "red" || color === "yellow") ? color : '');
-      leftCircle.fill((color === "green") ? color : '');
+      leftCircle.fill((color === "red" || color === "yellow" || color === "green") ? color : '');
+      rightCircle.fill('');
   }
 
   // Update the color attribute
@@ -509,6 +512,7 @@ function createSignal(signal) {
         type: signal.type,
         color: signal.color,
         save: true,
+        config: signal.config
     });
     if (signal.rotation) {
       group.rotation(signal.rotation);
@@ -547,7 +551,7 @@ function createSignal(signal) {
         y: (signal.radius / 2) + 2,
         radius: signal.radius / 2,
         fill: '',
-        fill: (signal.color == "red" || signal.color == "yellow" || signal.color == "dyellow") ? signal.color : '',
+        fill: (signal.color == "dyellow") ? signal.color : '',
     });
     group.add(leftCircle);
 
@@ -558,7 +562,7 @@ function createSignal(signal) {
         y: (signal.radius / 2) + 2.2,
         radius: signal.radius / 2,
         fill: '',
-        fill: (signal.color == "green" || signal.color == "dyellow") ? signal.color : '',
+        fill: (signal.color == "red" || signal.color == "yellow" || signal.color == "green") ? signal.color : '',
     });
     group.add(rightCircle);
 
@@ -835,15 +839,27 @@ function renderControllers() {
       const element = findElementById(layer, id);
       if (element) {
         const connectedElement = findElementById(layer, element.attrs.connectedElement);
+        var elementName = connectedElement.attrs.type + ": ";
+        if (connectedElement.attrs.config) {
+          elementName += connectedElement.attrs.config.Name;
+        } else {
+          elementName += connectedElement.attrs.id.split('-').pop();
+        }
         if (connectedElement.attrs.type === "point") {
+          var switchedLabel = "Switched";
+          var normalLabel = "Normal";
+          if (connectedElement.attrs.config) {
+            switchedLabel = connectedElement.attrs.config.Switched;
+            normalLabel = connectedElement.attrs.config.Normal;
+          }
           const controllerHTML = `
             <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
               <button onclick="configureElement('${connectedElement.attrs.id}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
                 <i class="fas fa-cog"></i>
               </button>
-              <p style="padding: 0; margin: 0;">${connectedElement.attrs.type}: ${connectedElement.attrs.id.split('-').pop()}</p>
-              <button onclick="setPointState('${connectedElement.attrs.id}','normal')">Normal</button>
-              <button onclick="setPointState('${connectedElement.attrs.id}','switched')">Switched</button>
+              <p style="padding: 0; margin: 0;">${elementName}</p>
+              <button onclick="setPointState('${connectedElement.attrs.id}','normal')">${normalLabel}</button>
+              <button onclick="setPointState('${connectedElement.attrs.id}','switched')">${switchedLabel}</button>
             </div>
           `;
           document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
@@ -854,17 +870,17 @@ function renderControllers() {
               <button onclick="configureElement('${connectedElement.attrs.id}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
                 <i class="fas fa-cog"></i>
               </button>
-              <p style="padding: 0; margin: 0;">${connectedElement.attrs.type}: ${connectedElement.attrs.id.split('-').pop()}</p>
+              <p style="padding: 0; margin: 0;">${elementName}</p>
               <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','red')">
                   <svg width="20" height="26">
                       <!-- Red signal icon -->
-                      <circle cx="10" cy="6" r="6" fill="red" />
+                      <circle cx="10" cy="20" r="6" fill="red" />
                   </svg>
               </button>
               <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','yellow')">
                   <svg width="20" height="26">
                       <!-- Yellow signal icon -->
-                      <circle cx="10" cy="6" r="6" fill="yellow" />
+                      <circle cx="10" cy="20" r="6" fill="yellow" />
                   </svg>
               </button>
               <button style="padding: 10px;" onclick="changeSignal('${connectedElement.attrs.id}','dyellow')">
@@ -935,6 +951,7 @@ function saveElementData(elementId,values) {
 
 function configureElement(elementId) {
   const element = findElementById(layer, elementId);
+
   // Get the popup template
   const popupTemplate = document.getElementById('popupTemplate');
 
@@ -948,7 +965,8 @@ function configureElement(elementId) {
   if (element.attrs.type == "signal") {
       schema = 'schemas/signals.json';
   }
-  var data = {};
+  console.log(element);
+  var data = element.attrs.config || {};
   data._id = elementId;
   fetch(schema)
   .then(response => response.json())
