@@ -98,9 +98,6 @@ def control_train_function(train_number, function_id):
 
     return jsonify({'message': f'Train {train_number} function {function_id} set to {switch}'}), 200
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
-
 # API endpoint to control the state of an accessory
 @app.route('/accessory/<int:accessory_number>', methods=['PUT'])
 def control_accessory_state(accessory_number):
@@ -115,3 +112,6 @@ def control_accessory_state(accessory_number):
         return jsonify({'message': f'Accessory {accessory_number} deactivated'}), 200
     else:
         return jsonify({'message': 'Invalid state specified. Please use "activate" or "deactivate"'}), 400
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8080)
