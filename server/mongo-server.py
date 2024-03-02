@@ -43,6 +43,17 @@ class RealHornbyController:
         t = hornby.Train(train_number)
         t.function(function_id, switch)
 
+    def accessory(self, accessory_number, state):
+        import hornby  # Import hornby module only when using the real controller
+        # Control the accessory based on the state parameter
+        a = hornby.Accessory(accessory_number, 0)
+        if state.lower() == 'activate':
+            a.activate()
+        elif state.lower() == 'deactivate':
+            a.deactivate()
+        else:
+            print("Invalid state specified. Please use 'activate' or 'deactivate'")
+
 class MockHornbyController:
     def __init__(self):
         pass
@@ -53,6 +64,10 @@ class MockHornbyController:
 
     def function(self, train_number, function_id, switch):
         # Simulate function control (update mock state)
+        pass
+
+    def accessory(self, accessory_number,state):
+        # Simulate accessory control (update mock state)
         pass
 
 # Create the appropriate controller based on configuration
@@ -386,3 +401,17 @@ def control_train_function(train_number, function_id):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
+
+    # API endpoint to control the state of an accessory
+@app.route('/accessory/<int:accessory_number>/<string:state>', methods=['PUT'])
+def control_accessory_state(accessory_number, state):
+    if state.lower() == 'activate':
+        # Activate the accessory
+        controller.accessory(accessory_number)
+        return jsonify({'message': f'Accessory {accessory_number} activated'}), 200
+    elif state.lower() == 'deactivate':
+        # Deactivate the accessory
+        controller.accessory(accessory_number)
+        return jsonify({'message': f'Accessory {accessory_number} deactivated'}), 200
+    else:
+        return jsonify({'message': 'Invalid state specified. Please use "activate" or "deactivate"'}), 400
