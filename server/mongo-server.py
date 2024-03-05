@@ -4,18 +4,23 @@ from pymongo import MongoClient
 import json
 from bson import json_util, ObjectId
 from flask_cors import CORS
+import configparser  # Import the configparser module
 
 import time
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)  # Enable CORS for the entire application
 
+# Load configuration from .config file
+config = configparser.ConfigParser()
+config.read('config.ini')  # Assuming your config file is named 'config.ini'
+# Read the value of USE_MOCK_CONTROLLER from the config file
+USE_MOCK_CONTROLLER = config.getboolean('general', 'USE_MOCK_CONTROLLER')
+
 # Initialize MongoDB client
 client = MongoClient('mongodb://localhost:27017/')
 db = client['dcc_db']
 
-# Configuration: Set this flag to True to use the mock controller for development.
-USE_MOCK_CONTROLLER = True
 trains_collection = db['trains']
 
 # Configuration for file upload
@@ -30,6 +35,7 @@ class RealHornbyController:
         import hornby  # Import hornby module only when using the real controller
         # Open a serial connection with the Hornby Elite DCC controller
         hornby.connection_open(device_path, baud_rate)
+        print(" * Hornby controller connected")
 
     def throttle(self, train_number, speed, direction):
         import hornby  # Import hornby module only when using the real controller
@@ -56,6 +62,7 @@ class RealHornbyController:
 
 class MockHornbyController:
     def __init__(self):
+        print(" * Using MOCK Controller")
         pass
 
     def throttle(self, train_number, speed, direction):
