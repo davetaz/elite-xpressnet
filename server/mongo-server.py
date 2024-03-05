@@ -46,11 +46,11 @@ class RealHornbyController:
     def accessory(self, accessory_number, direction):
         import hornby  # Import hornby module only when using the real controller
         # Control the accessory based on the state parameter
-        a = hornby.Accessory(accessory_number, 0)
+        a = hornby.Accessory(accessory_number)
         if direction == 0:
             a.activateOutput2()
         elif direction == 1:
-            a.activateOutput2()
+            a.activateOutput1()
         else:
             print("Invalid state specified.")
 
