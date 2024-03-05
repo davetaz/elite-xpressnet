@@ -111,10 +111,11 @@ class Train:
         send(message)
 
 class Accessory:
-    def __init__(self, address, offset):
-        self.address = address
-        self.offset = offset
+    def __init__(self, address):
+        self.offset = address % 4
+        self.address = address // 4
 
+    # OLD Activate Function
     def activate(self):
         message = bytearray(b'\x52\x00\x00')
         message[1] = self.address
@@ -124,11 +125,33 @@ class Accessory:
         parity(message)
         send(message)
 
+    # OLD Deactivate Function
     def deactivate(self):
         message = bytearray(b'\x52\x00\x00')
         message[1] = self.address
         message[2] = self.offset
         message[2] |= 0x80
         message[2] &= 0xFE
+        parity(message)
+        send(message)
+
+    # The following two functions switch turnouts.
+    def activateOutput1(self):
+        message = bytearray(b'\x52\x00\x00')
+        message[1] = self.address
+        #Set activate bit and set output to 1
+        message[2] = 0x80
+        #Set offset bits
+        message[2] |= (self.offset & 0x03) << 1
+        parity(message)
+        send(message)
+
+    def activateOutput2(self):
+        message = bytearray(b'\x52\x00\x00')
+        message[1] = self.address
+        #Set activate bit and set output to 2
+        message[2] = 0x81
+        #Set offset bits
+        message[2] |= (self.offset & 0x03) << 1
         parity(message)
         send(message)

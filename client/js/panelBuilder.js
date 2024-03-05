@@ -791,6 +791,8 @@ function switchPoint(id) {
   if (element) {
     element.attrs.switched = !element.attrs.switched;
     setPointDirection(element, element.attrs.switched);
+    
+    
     saveStage();
   } else {
     console.error(`Element with id ${id} not found`);
@@ -1028,4 +1030,22 @@ function configureElement(elementId,controllerID) {
 
   // Append the popup content to the trackCanvas div
   document.getElementById('trackCanvas').appendChild(popupContent);
+}
+
+function setAccessoryState(dccNumber, state) {
+  if (serverStatus != "online"){
+      log('Cannot send command, server ' + serverStatus );
+      return;
+  }
+  return fetch(`//${server}/accessory/${dccNumber}`, {
+      method: "PUT",
+      headers: {
+          "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ state }),
+  })
+  .then((response) => response.json())
+  .catch((error) => {
+      console.error("Error updating server:", error);
+  });
 }

@@ -17,7 +17,7 @@
                 "type": "string",
                 "enum": ["", "Red", "Amber", "Green", "Amber (second)"],
                 "title": "Colour"
-              },
+            },
             "DCCNumber": {
                 "type": "integer",
                 "minimum": 1,
