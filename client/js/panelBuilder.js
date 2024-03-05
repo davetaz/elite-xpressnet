@@ -791,8 +791,18 @@ function switchPoint(id) {
   if (element) {
     element.attrs.switched = !element.attrs.switched;
     setPointDirection(element, element.attrs.switched);
-    
-    
+    const switchedDirection = element.attrs.config.SwitchedDirection;
+          var direction = switchedDirection;
+          if (switched) {
+            direction = switchedDirection.toUpperCase();
+          } else {
+            if (switchedDirection.toUpperCase() == "FORWARD") {
+              direction = "REVERSE";
+            } else {
+              direction = "FORWARD";
+            }
+          }
+          setAccessoryDirection(element.attrs.config.DCCNumber,direction);
     saveStage();
   } else {
     console.error(`Element with id ${id} not found`);
@@ -805,6 +815,18 @@ function setPointState(id, state) {
       if (state === "normal" || state === "switched") {
           element.attrs.switched = (state === "switched");
           setPointDirection(element, element.attrs.switched);
+          const switchedDirection = element.attrs.config.SwitchedDirection;
+          var direction = switchedDirection;
+          if (switched) {
+            direction = switchedDirection.toUpperCase();
+          } else {
+            if (switchedDirection.toUpperCase() == "FORWARD") {
+              direction = "REVERSE";
+            } else {
+              direction = "FORWARD";
+            }
+          }
+          setAccessoryDirection(element.attrs.config.DCCNumber,direction);
           saveStage();
       } else {
           console.error('Invalid state provided');
@@ -1032,7 +1054,7 @@ function configureElement(elementId,controllerID) {
   document.getElementById('trackCanvas').appendChild(popupContent);
 }
 
-function setAccessoryState(dccNumber, state) {
+function setAccessoryDirection(dccNumber, direction) {
   if (serverStatus != "online"){
       log('Cannot send command, server ' + serverStatus );
       return;
@@ -1042,7 +1064,7 @@ function setAccessoryState(dccNumber, state) {
       headers: {
           "Content-Type": "application/json",
       },
-      body: JSON.stringify({ state }),
+      body: JSON.stringify({ direction }),
   })
   .then((response) => response.json())
   .catch((error) => {

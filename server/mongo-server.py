@@ -53,9 +53,9 @@ class RealHornbyController:
         import hornby  # Import hornby module only when using the real controller
         # Control the accessory based on the state parameter
         a = hornby.Accessory(accessory_number)
-        if direction == 0:
+        if direction == "FORWARD":
             a.activateOutput2()
-        elif direction == 1:
+        elif direction == "REVERSE":
             a.activateOutput1()
         else:
             print("Invalid state specified.")
@@ -73,7 +73,7 @@ class MockHornbyController:
         # Simulate function control (update mock state)
         pass
 
-    def accessory(self, accessory_number,state):
+    def accessory(self, accessory_number,direction):
         # Simulate accessory control (update mock state)
         pass
 
@@ -410,12 +410,7 @@ def control_train_function(train_number, function_id):
 @app.route('/accessory/<int:accessory_number>', methods=['PUT'])
 def control_accessory_state(accessory_number):
     direction = request.json.get('direction', 0)
-    if direction == 1:
-        # Activate the accessory
-        controller.accessory(accessory_number,direction)
-        return jsonify({'message': f'Accessory {accessory_number}: Set direction {direction}'}), 200
-    elif direction == 0:
-        # Deactivate the accessory
+    if (direction == "FORWARD" | direction == "REVERSE"):
         controller.accessory(accessory_number,direction)
         return jsonify({'message': f'Accessory {accessory_number}: Set direction {direction}'}), 200
     else:
