@@ -410,7 +410,7 @@ def control_train_function(train_number, function_id):
 @app.route('/accessory/<int:accessory_number>', methods=['PUT'])
 def control_accessory_state(accessory_number):
     direction = request.json.get('direction', 0)
-    if (direction == "FORWARD" | direction == "REVERSE"):
+    if direction in ["FORWARD", "REVERSE"]:
         controller.accessory(accessory_number,direction)
         return jsonify({'message': f'Accessory {accessory_number}: Set direction {direction}'}), 200
     else:
