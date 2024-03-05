@@ -136,6 +136,7 @@ class Accessory:
         send(message)
 
     # The following two functions switch turnouts.
+    # Output 1 is reverse on the hornby elite
     def activateOutput1(self):
         message = bytearray(b'\x52\x00\x00')
         message[1] = self.address
@@ -146,6 +147,7 @@ class Accessory:
         parity(message)
         send(message)
 
+    # Output 2 is forward on the hornby elite
     def activateOutput2(self):
         message = bytearray(b'\x52\x00\x00')
         message[1] = self.address
