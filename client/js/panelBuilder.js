@@ -817,7 +817,7 @@ function setPointState(id, state) {
           setPointDirection(element, element.attrs.switched);
           const switchedDirection = element.attrs.config.SwitchedDirection;
           var direction = switchedDirection;
-          if (switched) {
+          if (element.attrs.switched) {
             direction = switchedDirection.toUpperCase();
           } else {
             if (switchedDirection.toUpperCase() == "FORWARD") {
