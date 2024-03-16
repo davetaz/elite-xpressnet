@@ -315,8 +315,51 @@ function setPointDirection(group,switched) {
     group.add(selector);
     group.add(mainShape);
     group.add(entryLine);
-    console.log("Set point direction");
+    if (switched) {
+      point.switched = true;
 
+      if (point.subtype == "normal") {
+        const switchLine = new Konva.Path({
+            stroke: 'green',
+            strokeWidth: 2,
+            // This should be the only different thing between the two types of point
+            data: ` M${blockSnapSize-5},${(blockSnapSize / 2)}
+                    C${(blockSnapSize * 2) - 20},${(blockSnapSize / 2)}
+                    ${blockSnapSize * 2},0
+                    ${blockSnapSize * 2},0`,
+        });
+        group.add(switchLine);
+      } else if (point.subtype == "toStraight") {
+        // OLD CODE HERE
+          const switchLine = new Konva.Path({
+            stroke: 'green',
+            strokeWidth: 2,
+            data: `M${30},${(blockSnapSize / 2) + blockSnapSize}
+                   C${35 + 38},${(blockSnapSize / 2) + blockSnapSize - 7}
+                   ${point.width - 23},${(blockSnapSize / 2)}
+                   ${point.width - 1},${(blockSnapSize / 2)}`,
+        });
+        group.add(switchLine);
+      }
+    } else {
+      point.switched = false;
+      if (point.subtype == "normal") {
+        const switchLine = new Konva.Line({
+            stroke: 'green',
+            strokeWidth: 2,
+            points: [blockSnapSize-5, (blockSnapSize / 2), point.width, (blockSnapSize / 2)],
+        });
+        group.add(switchLine)
+      } else if (point.subtype == "toStraight") {
+        const switchLine = new Konva.Line({
+          stroke: 'green',
+          strokeWidth: 2,
+          points: [30, (blockSnapSize / 2) + blockSnapSize, point.width, (blockSnapSize / 2) + blockSnapSize],
+        });
+        group.add(switchLine)
+      }
+    }
+    /*
     if (switched) {
         point.switched = true;
         const switchLine = new Konva.Path({
@@ -337,89 +380,191 @@ function setPointDirection(group,switched) {
         });
         group.add(switchLine)
     }
+    */
     return group;
 }
 
 function createPoint(point) {
-    let group = new Konva.Group({
-        id: point.id || generateGUID(),
-        x: point.x,
-        y: point.y,
-        rotation: point.rotation,
-        width: point.width,
-        height: point.height,
-        draggable: true,
-        name: point.name,
-        type: point.type,
-        save: true,
-        switched: point.switched,
-        vflip: point.vflip,
-        hflip: point.hflip,
-        config: point.config
-    })
-    if (point.rotation) {
-      group.rotation(point.rotation);
+    if (point.subtype == "toStraight") {
+      return createPointToStraight(point);
+    } else {
+      return createNormalPoint(point);
     }
-    if (point.vflip) {
-      group.offsetY(group.height());
-      group.scaleY(-group.scaleY());
-    }
-    if (point.hflip) {
-      group.offsetX(group.width());
-      group.scaleX(-group.scaleX());
-    }
-    const selector = new Konva.Rect({
-        width: point.width,
-        height: point.height,
-        name: 'selector',
-    })
-    group.add(selector);
-    const mainShape = new Konva.Shape({
-        stroke: 'gray',
-        strokeWidth: 2,
-        width: point.width,
-        height: point.height,
-        name: 'mainShape',
-        sceneFunc: function (ctx, shape) {
-            ctx.beginPath();
-            ctx.moveTo(0,blockSnapSize + (blockSnapSize / 2) - 5);
-            // Left join
-            ctx.lineTo(20, blockSnapSize + (blockSnapSize / 2) - 5);
-            // Top right
-            ctx.bezierCurveTo(41+30, blockSnapSize + (blockSnapSize / 2) - 5, point.width-30, (blockSnapSize / 2) - 5, point.width,(blockSnapSize / 2) - 5);
-            //ctx.lineTo(point.x + point.width, point.y);
-            ctx.strokeShape(shape);
+}
 
-            ctx.beginPath();
-            // Bottom left
-            ctx.moveTo(0, blockSnapSize + (blockSnapSize / 2) + 5);
-            // Bottom right (lower)
-            ctx.lineTo(point.width,blockSnapSize + (blockSnapSize / 2) + 5);
-            ctx.strokeShape(shape);
+function createNormalPoint(point) {
+  let group = new Konva.Group({
+      id: point.id || generateGUID(),
+      x: point.x,
+      y: point.y,
+      rotation: point.rotation,
+      width: point.width,
+      height: point.height,
+      draggable: true,
+      name: point.name,
+      type: point.type,
+      subtype: point.subtype,
+      save: true,
+      switched: point.switched,
+      vflip: point.vflip,
+      hflip: point.hflip,
+      config: point.config
+  })
+  if (point.rotation) {
+    group.rotation(point.rotation);
+  }
+  if (point.vflip) {
+    group.offsetY(group.height());
+    group.scaleY(-group.scaleY());
+  }
+  if (point.hflip) {
+    group.offsetX(group.width());
+    group.scaleX(-group.scaleX());
+  }
+  const selector = new Konva.Rect({
+      width: point.width,
+      height: point.height,
+      name: 'selector',
+  })
+  group.add(selector);
+  const mainShape = new Konva.Shape({
+      stroke: 'gray',
+      strokeWidth: 2,
+      width: point.width,
+      height: point.height,
+      name: 'mainShape',
+      sceneFunc: function (ctx, shape) {
+          ctx.beginPath();
+          ctx.moveTo(0,(blockSnapSize / 2) - 5);
+          // Left join
+          ctx.lineTo(20,(blockSnapSize / 2) - 5);
+          // Top right
+          // ctx.bezierCurveTo(41+30, blockSnapSize + (blockSnapSize / 2) - 5, point.width-30, (blockSnapSize / 2) - 5, point.width,(blockSnapSize / 2) - 5);
+          ctx.bezierCurveTo(30, (blockSnapSize / 2) - 5,
+                            blockSnapSize + 8,  15,
+                            (blockSnapSize * 2)-10,0);
 
-            ctx.beginPath();
-            // Bottom right (upper)
-            ctx.moveTo(point.width, blockSnapSize + (blockSnapSize / 2) - 5);
-            // Right join
-            ctx.lineTo(56, blockSnapSize + (blockSnapSize / 2) - 5);
-            // Top right (lower)
-            ctx.bezierCurveTo(40+30, blockSnapSize + (blockSnapSize / 2) - 5, point.width-15, (blockSnapSize / 2) + 5, point.width, (blockSnapSize / 2) + 5);
-            // (!) Konva specific method, it is very important
-            ctx.strokeShape(shape);
-        }
-    });
+          //ctx.lineTo(point.x + point.width, point.y);
+          ctx.strokeShape(shape);
 
-    // Create a line with green stroke
-    const entryLine = new Konva.Line({
-        points: [0, (blockSnapSize / 2) + blockSnapSize, 30, (blockSnapSize / 2) + blockSnapSize],
-        stroke: 'green',
-        strokeWidth: 2,
-        name: 'entryLine',
-    });
-    group.add(entryLine);
-    group.add(mainShape);
-    group = setPointDirection(group,point.switched);
-    return group;
+          ctx.beginPath();
+          // Bottom left
+          ctx.moveTo(0, (blockSnapSize / 2) + 5);
+          // Bottom right (lower)
+          ctx.lineTo(point.width, (blockSnapSize / 2) + 5);
+          ctx.strokeShape(shape);
+
+          ctx.beginPath();
+          // Bottom right (upper)
+          ctx.moveTo(point.width, (blockSnapSize / 2) - 5);
+          // Right join
+          ctx.lineTo((blockSnapSize /2) + blockSnapSize + 7, (blockSnapSize / 2) - 5);
+          // Top right (lower)
+          // ctx.bezierCurveTo(40+30, blockSnapSize + (blockSnapSize / 2) - 5, point.width-15, (blockSnapSize / 2) + 5, point.width, (blockSnapSize / 2) + 5);
+          ctx.bezierCurveTo((blockSnapSize /2) + blockSnapSize + 10, (blockSnapSize / 2) - 5,
+                            (blockSnapSize * 2), 10,
+                            (point.width-blockSnapSize)+10, 0);
+          // (!) Konva specific method, it is very important
+          ctx.strokeShape(shape);
+      }
+  });
+
+  // Create a line with green stroke
+  const entryLine = new Konva.Line({
+      points: [0, (blockSnapSize / 2), blockSnapSize-5, (blockSnapSize / 2)],
+      stroke: 'green',
+      strokeWidth: 2,
+      name: 'entryLine',
+  });
+  group.add(entryLine);
+  group.add(mainShape);
+  group = setPointDirection(group,point.switched);
+  return group;
+}
+
+function createPointToStraight(point) {
+  let group = new Konva.Group({
+      id: point.id || generateGUID(),
+      x: point.x,
+      y: point.y,
+      rotation: point.rotation,
+      width: point.width,
+      height: point.height,
+      draggable: true,
+      name: point.name,
+      type: point.type,
+      subtype: point.subtype,
+      save: true,
+      switched: point.switched,
+      vflip: point.vflip,
+      hflip: point.hflip,
+      config: point.config
+  })
+  if (point.rotation) {
+    group.rotation(point.rotation);
+  }
+  if (point.vflip) {
+    group.offsetY(group.height());
+    group.scaleY(-group.scaleY());
+  }
+  if (point.hflip) {
+    group.offsetX(group.width());
+    group.scaleX(-group.scaleX());
+  }
+  const selector = new Konva.Rect({
+      width: point.width,
+      height: point.height,
+      name: 'selector',
+  })
+  group.add(selector);
+  const mainShape = new Konva.Shape({
+      stroke: 'gray',
+      strokeWidth: 2,
+      width: point.width,
+      height: point.height,
+      name: 'mainShape',
+      sceneFunc: function (ctx, shape) {
+          ctx.beginPath();
+          ctx.moveTo(0,blockSnapSize + (blockSnapSize / 2) - 5);
+          // Left join
+          ctx.lineTo(20, blockSnapSize + (blockSnapSize / 2) - 5);
+          // Top right
+          ctx.bezierCurveTo(41+30, blockSnapSize + (blockSnapSize / 2) - 5, point.width-30, (blockSnapSize / 2) - 5, point.width,(blockSnapSize / 2) - 5);
+
+          //ctx.lineTo(point.x + point.width, point.y);
+          ctx.strokeShape(shape);
+
+          ctx.beginPath();
+          // Bottom left
+          ctx.moveTo(0, blockSnapSize + (blockSnapSize / 2) + 5);
+          // Bottom right (lower)
+          ctx.lineTo(point.width,blockSnapSize + (blockSnapSize / 2) + 5);
+          ctx.strokeShape(shape);
+
+          ctx.beginPath();
+          // Bottom right (upper)
+          ctx.moveTo(point.width, blockSnapSize + (blockSnapSize / 2) - 5);
+          // Right join
+          ctx.lineTo((blockSnapSize /2) + blockSnapSize + 7, blockSnapSize + (blockSnapSize / 2) - 5);
+          // Top right (lower)
+          ctx.bezierCurveTo(40+30, blockSnapSize + (blockSnapSize / 2) - 5, point.width-15, (blockSnapSize / 2) + 5, point.width, (blockSnapSize / 2) + 5);
+
+          // (!) Konva specific method, it is very important
+          ctx.strokeShape(shape);
+      }
+  });
+
+  // Create a line with green stroke
+  const entryLine = new Konva.Line({
+      points: [0, (blockSnapSize / 2) + blockSnapSize, blockSnapSize-5, (blockSnapSize / 2) + blockSnapSize],
+      stroke: 'green',
+      strokeWidth: 2,
+      name: 'entryLine',
+  });
+  group.add(entryLine);
+  group.add(mainShape);
+  group = setPointDirection(group,point.switched);
+  return group;
 }
 
 function createStraight(element) {
@@ -474,6 +619,104 @@ function createStraight(element) {
     group.add(shape);
 
     return group; // or return shape; if you don't need it inside a group
+}
+
+function _createElementBaseGroup(element) {
+  let group = new Konva.Group({
+      id: element.id || generateGUID(),
+      x: element.x,
+      y: element.y,
+      rotation: element.rotation,
+      width: element.width,
+      height: element.height,
+      draggable: true,
+      name: element.name,
+      type: element.type,
+      subtype: element.subtype,
+      switched: element.switched,
+      color: element.color,
+      save: true,
+      config: element.config
+  });
+  if (element.rotation) {
+    group.rotation(element.rotation);
+  }
+  if (element.vflip) {
+    element.offsetY(element.height());
+    element.scaleY(-element.scaleY());
+  }
+  if (element.hflip) {
+    element.offsetX(element.width());
+    element.scaleX(-element.scaleX());
+  }
+  const selector = new Konva.Rect({
+      width: element.width,
+      height: blockSnapSize,
+      name: 'selector',
+  })
+  group.add(selector);
+  return group;
+}
+
+function createDiagonal(element) {
+  const group = _createElementBaseGroup(element);
+  const shape = new Konva.Shape({
+      stroke: 'gray',
+      strokeWidth: 2,
+      width: element.width,
+      height: element.height,
+      name: 'mainShape',
+      sceneFunc: function (ctx, shape) {
+          ctx.beginPath();
+          ctx.moveTo(blockSnapSize-10,blockSnapSize);
+          ctx.lineTo((blockSnapSize*2)-10, 0);
+
+          ctx.moveTo(blockSnapSize+10,blockSnapSize)
+          ctx.lineTo((blockSnapSize*2)+10, 0);
+
+          ctx.strokeShape(shape);
+      }
+  });
+
+  group.add(shape);
+
+  return group; // or return shape; if you don't need it inside a group
+}
+
+function createCrossOver(element) {
+  const group = _createElementBaseGroup(element);
+  const shape = new Konva.Shape({
+      stroke: 'gray',
+      strokeWidth: 2,
+      width: element.width,
+      height: element.height,
+      name: 'mainShape',
+      sceneFunc: function (ctx, shape) {
+          ctx.beginPath();
+
+          //ctx.moveTo(0, (blockSnapSize / 2) + 5);
+          //ctx.lineTo(element.width, (blockSnapSize / 2) + 5);
+
+          ctx.moveTo(blockSnapSize-10,blockSnapSize);
+          var halfX = ((blockSnapSize-10) + ((blockSnapSize*2)-10)/2);
+          var halfY = (blockSnapSize/2);
+          ctx.lineTo(halfX - 18, halfY + 5);
+          ctx.lineTo(0,halfY + 5)
+
+          ctx.moveTo(blockSnapSize+10,blockSnapSize)
+          ctx.lineTo((blockSnapSize*2)+10, 0);
+
+          ctx.moveTo(0, (blockSnapSize / 2) - 5);
+          ctx.lineTo(halfX - 10, halfY - 5);
+          ctx.lineTo((blockSnapSize*2)-10,0);
+
+          ctx.strokeShape(shape);
+      }
+  });
+
+  group.add(shape);
+
+  return group; // or return shape; if you don't need it inside a group
 }
 
 function setSignalColor(signalGroup, color) {
@@ -621,19 +864,28 @@ function createConnector(element1,element2) {
   layer.batchDraw();
 }
 
-function addPoint() {
-    const point = {
-        x: blockSnapSize,
-        y: blockSnapSize,
-        width: blockSnapSize * 3,
-        height: blockSnapSize * 2,
-        type: "point",
-        name: "shape",
-        switched: true,
-        draggable: true,
-    };
-    element = createPoint(point);
-    layer.add(element);
+function addPoint(type) {
+  height = blockSnapSize * 2;
+  if (type == "normal") {
+    height = blockSnapSize;
+  }
+  const point = {
+      x: blockSnapSize,
+      y: blockSnapSize,
+      width: blockSnapSize * 3,
+      height: height,
+      type: "point",
+      name: "shape",
+      subtype: type,
+      switched: true,
+      draggable: true,
+  };
+  if (type == "normal") {
+    element = createNormalPoint(point);
+  } else {
+    element = createPointToStraight(point);
+  }
+  layer.add(element);
 }
 
 function addStraight(length) {
@@ -652,6 +904,36 @@ function addStraight(length) {
     };
     element = createStraight(striat);
     layer.add(element);
+}
+
+function addCrossover() {
+  let width = blockSnapSize * 3;
+  const config = {
+      x:blockSnapSize,
+      y:blockSnapSize,
+      width: width,
+      height: blockSnapSize,
+      type: "crossOver",
+      name: "shape",
+      draggable: true,
+  };
+  element = createCrossOver(config);
+  layer.add(element);
+}
+
+function addDiagonal() {
+  let width = blockSnapSize * 3;
+  const striat = {
+      x:blockSnapSize,
+      y:blockSnapSize,
+      width: width,
+      height: blockSnapSize,
+      type: "diagonal",
+      name: "shape",
+      draggable: true,
+  };
+  element = createDiagonal(striat);
+  layer.add(element);
 }
 
 function addSignal(color) {
@@ -836,10 +1118,35 @@ function setPointState(id, state) {
   }
 }
 
-function changeSignal(id,color) {
+function changeSignal(id, color) {
   const element = findElementById(layer, id);
   if (element) {
-    setSignalColor(element,color);
+    const config = element.attrs.config || { Aspects: [] };
+    let dccNumber, direction;
+
+    // Map colors from config to colors used in the code
+    const colorMap = {
+      "red": "Red",
+      "yellow": "Amber",
+      "green": "Green",
+      "dyellow": "Amber (second)"
+    };
+
+    // Find the aspect in config that matches the given color
+    const matchingAspect = config.Aspects.find(aspect => aspect.Colour === colorMap[color]);
+
+    // If a matching aspect is found, retrieve dccNumber and direction
+    if (matchingAspect) {
+      dccNumber = matchingAspect.DCCNumber;
+      direction = matchingAspect['Aspect direction'].toUpperCase();
+
+      // Set accessory direction using retrieved values
+      setAccessoryDirection(dccNumber, direction);
+    } else {
+      console.error(`Aspect with color ${color} not found in the configuration.`);
+    }
+    // Set signal color and save stage
+    setSignalColor(element, color);
     saveStage();
   } else {
     console.error(`Element with id ${id} not found`);

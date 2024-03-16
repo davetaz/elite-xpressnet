@@ -31,10 +31,13 @@
         <div id="trackCanvas" style="width:1024px; height:600px; display: inline-block; position: relative;">
         </div>
         <buttons style="vertical-align: top; width: 200px; height: 400px; display: inline-block;">
-            <button id="addLHup" onclick="addPoint()">Add Point</button>
+            <button id="addPoint" onclick="addPoint('normal')">Add Point</button>
+            <button id="addPointToStraight" onclick="addPoint('toStraight')">Add Point (to straight)</button>
+            <button id="addDiagonal" onclick="addDiagonal()">Add Diagonal</button>
+            <button id="addCrossover" onclick="addCrossover()">Add Crossover</button>
             <button id="addStraightShort" onclick="addStraight('short')">Add Straight (short)</button>
             <button id="addStraightLong" onclick="addStraight('long')">Add Straight (long)</button>
-            <button id="addSignal" onclick="addSignal('red')">Add Signal</button><br/>
+            <button id="addSignal" onclick="addSignal('Red')">Add Signal</button><br/>
             <button id="addControlElement" onclick="addControlElement()">Add Control Panel</button><br/>
             <button id="showControllers" onclick="renderControllers()">Show controllers</button><br/>
             <button id="hideControllers" onclick="hideControllers()" >Hide controllers</button><br/>
