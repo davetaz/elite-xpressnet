@@ -384,6 +384,62 @@ function setPointDirection(group,switched) {
     return group;
 }
 
+function setCrossoverDirection(group,switched) {
+  var point = group.attrs;
+  const mainShape = group.findOne('.mainShape');
+  const selector = group.findOne('.selector');
+  const entryLine = group.findOne('.entryLine');
+  group.removeChildren();
+  group.add(selector);
+  group.add(mainShape);
+  group.add(entryLine);
+  if (switched) {
+    point.switched = true;
+
+    if (point.subtype == "normal") {
+      const switchLine = new Konva.Path({
+          stroke: 'green',
+          strokeWidth: 2,
+          // This should be the only different thing between the two types of point
+          data: ` M${blockSnapSize-5},${(blockSnapSize / 2)}
+                  C${(blockSnapSize * 2) - 20},${(blockSnapSize / 2)}
+                  ${blockSnapSize * 2},0
+                  ${blockSnapSize * 2},0`,
+      });
+      group.add(switchLine);
+    } else if (point.subtype == "toStraight") {
+      // OLD CODE HERE
+        const switchLine = new Konva.Path({
+          stroke: 'green',
+          strokeWidth: 2,
+          data: `M${30},${(blockSnapSize / 2) + blockSnapSize}
+                 C${35 + 38},${(blockSnapSize / 2) + blockSnapSize - 7}
+                 ${point.width - 23},${(blockSnapSize / 2)}
+                 ${point.width - 1},${(blockSnapSize / 2)}`,
+      });
+      group.add(switchLine);
+    }
+  } else {
+    point.switched = false;
+    if (point.subtype == "normal") {
+      const switchLine = new Konva.Line({
+          stroke: 'green',
+          strokeWidth: 2,
+          points: [blockSnapSize-5, (blockSnapSize / 2), point.width, (blockSnapSize / 2)],
+      });
+      group.add(switchLine)
+    } else if (point.subtype == "toStraight") {
+      const switchLine = new Konva.Line({
+        stroke: 'green',
+        strokeWidth: 2,
+        points: [30, (blockSnapSize / 2) + blockSnapSize, point.width, (blockSnapSize / 2) + blockSnapSize],
+      });
+      group.add(switchLine)
+    }
+  }
+  return group;
+}
+
 function createPoint(point) {
     if (point.subtype == "toStraight") {
       return createPointToStraight(point);
@@ -442,7 +498,7 @@ function createNormalPoint(point) {
           // ctx.bezierCurveTo(41+30, blockSnapSize + (blockSnapSize / 2) - 5, point.width-30, (blockSnapSize / 2) - 5, point.width,(blockSnapSize / 2) - 5);
           ctx.bezierCurveTo(30, (blockSnapSize / 2) - 5,
                             blockSnapSize + 8,  15,
-                            (blockSnapSize * 2)-10,0);
+                            (blockSnapSize * 2)-9,0);
 
           //ctx.lineTo(point.x + point.width, point.y);
           ctx.strokeShape(shape);
@@ -461,9 +517,9 @@ function createNormalPoint(point) {
           ctx.lineTo((blockSnapSize /2) + blockSnapSize + 7, (blockSnapSize / 2) - 5);
           // Top right (lower)
           // ctx.bezierCurveTo(40+30, blockSnapSize + (blockSnapSize / 2) - 5, point.width-15, (blockSnapSize / 2) + 5, point.width, (blockSnapSize / 2) + 5);
-          ctx.bezierCurveTo((blockSnapSize /2) + blockSnapSize + 10, (blockSnapSize / 2) - 5,
-                            (blockSnapSize * 2), 10,
-                            (point.width-blockSnapSize)+10, 0);
+          ctx.bezierCurveTo((blockSnapSize /2) + blockSnapSize + 9, (blockSnapSize / 2) - 5,
+                            (blockSnapSize * 2), 9,
+                            (point.width-blockSnapSize)+9, 0);
           // (!) Konva specific method, it is very important
           ctx.strokeShape(shape);
       }
@@ -668,11 +724,11 @@ function createDiagonal(element) {
       name: 'mainShape',
       sceneFunc: function (ctx, shape) {
           ctx.beginPath();
-          ctx.moveTo(blockSnapSize-10,blockSnapSize);
-          ctx.lineTo((blockSnapSize*2)-10, 0);
+          ctx.moveTo(blockSnapSize-9,blockSnapSize);
+          ctx.lineTo((blockSnapSize*2)-9, 0);
 
-          ctx.moveTo(blockSnapSize+10,blockSnapSize)
-          ctx.lineTo((blockSnapSize*2)+10, 0);
+          ctx.moveTo(blockSnapSize+9,blockSnapSize)
+          ctx.lineTo((blockSnapSize*2)+9, 0);
 
           ctx.strokeShape(shape);
       }
@@ -694,21 +750,27 @@ function createCrossOver(element) {
       sceneFunc: function (ctx, shape) {
           ctx.beginPath();
 
-          //ctx.moveTo(0, (blockSnapSize / 2) + 5);
-          //ctx.lineTo(element.width, (blockSnapSize / 2) + 5);
-
-          ctx.moveTo(blockSnapSize-10,blockSnapSize);
-          var halfX = ((blockSnapSize-10) + ((blockSnapSize*2)-10)/2);
+          //bottom left
+          ctx.moveTo(blockSnapSize-9,blockSnapSize);
+          var halfX = ((blockSnapSize-9) + ((blockSnapSize*2)-9)/2);
           var halfY = (blockSnapSize/2);
           ctx.lineTo(halfX - 18, halfY + 5);
           ctx.lineTo(0,halfY + 5)
 
-          ctx.moveTo(blockSnapSize+10,blockSnapSize)
-          ctx.lineTo((blockSnapSize*2)+10, 0);
-
+          // top left
           ctx.moveTo(0, (blockSnapSize / 2) - 5);
-          ctx.lineTo(halfX - 10, halfY - 5);
-          ctx.lineTo((blockSnapSize*2)-10,0);
+          ctx.lineTo(halfX - 9, halfY - 5);
+          ctx.lineTo((blockSnapSize*2)-9,0);
+
+          // bottom right
+          ctx.moveTo(blockSnapSize+9,blockSnapSize)
+          ctx.lineTo(halfX, halfY + 5);
+          ctx.lineTo((blockSnapSize*3),halfY + 5)
+
+          // top right
+          ctx.moveTo((blockSnapSize*3),halfY - 5)
+          ctx.lineTo(halfX+9, halfY-5);
+          ctx.lineTo((blockSnapSize*2)+9,0);
 
           ctx.strokeShape(shape);
       }
@@ -916,6 +978,7 @@ function addCrossover() {
       type: "crossOver",
       name: "shape",
       draggable: true,
+      switched: false,
   };
   element = createCrossOver(config);
   layer.add(element);
