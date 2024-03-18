@@ -68,7 +68,6 @@ def is_real_controller_available():
     except ImportError:
         return False
     except Exception as e:
-        print("Error while checking real controller availability:", e)
         return False
 
 # Create the appropriate controller based on availability
