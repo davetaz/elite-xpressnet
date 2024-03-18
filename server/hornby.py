@@ -16,7 +16,6 @@ def connection_open(device, baud):
     try:
         ser = serial.Serial(device, baud)
     except Exception as e:
-        print(e)
         raise RuntimeError('Unable to open connection with Hornby Elite Controller')
 
 def connection_close():
