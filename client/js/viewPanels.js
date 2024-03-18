@@ -31,7 +31,6 @@ function setupviewPanels() {
                 'copy', 'csv'
             ]
         });
-
         // Make an HTTP GET request to fetch data from //${server}/trains/
         $.get(`//${server}/panels/`, function (data) {
             // Assuming 'data' is an array of train objects

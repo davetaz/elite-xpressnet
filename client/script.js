@@ -23,32 +23,53 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 async function pollServer() {
+    let serverStatus, controllerStatus;
+
     if (localStorage.getItem("dctDCC-Server")) {
         server = localStorage.getItem("dctDCC-Server");
-        const url = `//${server}/train/3/throttle`;
+        const url = `//${server}/controller`;
 
         try {
             const response = await fetch(url);
 
-            if (response.status === 200 || response.status === 404) {
-                serverStatus = "online"; // Set serverStatus to online for 200 or 404 status codes
+            if (response.ok) {
+                const data = await response.json();
+                controllerStatus = data.status; // Get controller status from JSON response
+
+                if (response.status === 200 || response.status === 404) {
+                    serverStatus = "online";
+                } else {
+                    serverStatus = "error";
+                }
             } else {
-                serverStatus = "error"; // Set serverStatus to error for any other status code
-                server = null;
+                serverStatus = "error";
+                controllerStatus = "offline";
             }
         } catch (error) {
-            serverStatus = "offline"; // Set serverStatus to offline if there is an error in the fetch request
-            server = null;
+            console.error("Error fetching controller status:", error);
+            serverStatus = "online"; // Assuming server is online but failed to get controller status
+            controllerStatus = "offline";
         }
     } else {
-        // Handle the case when 'dctDCC-Server' is not set in localStorage
+        // No server configured
         serverStatus = "offline";
-        server = null;
+        controllerStatus = "offline";
     }
+
+    // Determine overall status
+    let overallStatus;
+    if (serverStatus === "online" && controllerStatus === "online") {
+        overallStatus = "Online";
+    } else if (serverStatus === "online" && controllerStatus === "offline") {
+        overallStatus = "Controller offline";
+    } else {
+        overallStatus = "Offline";
+    }
+
     // Update the <span> element with id 'serverStatus'
     const serverStatusSpan = document.getElementById("serverStatus");
     if (serverStatusSpan) {
-        serverStatusSpan.textContent = serverStatus;
+        serverStatusSpan.textContent = overallStatus;
     }
 }
 
