@@ -2,21 +2,22 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import time
+import threading
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for the entire application
-
-# Configuration: Set this flag to True to use the mock controller for development.
-USE_MOCK_CONTROLLER = True
 
 # Dictionary to store the state of trains
 train_state = {}
 
 class RealHornbyController:
     def __init__(self, device_path, baud_rate):
-        import hornby  # Import hornby module only when using the real controller
-        # Open a serial connection with the Hornby Elite DCC controller
-        hornby.connection_open(device_path, baud_rate)
+        try:
+            import hornby  # Import hornby module only when using the real controller
+            # Open a serial connection with the Hornby Elite DCC controller
+            hornby.connection_open(device_path, baud_rate)
+        except ImportError:
+            raise ImportError("Hornby library not installed. Please install it to use the real controller.")
 
     def throttle(self, train_number, speed, direction):
         import hornby  # Import hornby module only when using the real controller
@@ -57,11 +58,45 @@ class MockHornbyController:
         # Simulate accessory control (update mock state)
         pass
 
-# Create the appropriate controller based on configuration
-if USE_MOCK_CONTROLLER:
-    controller = MockHornbyController()
-else:
+# Check if the real controller is available
+def is_real_controller_available():
+    try:
+        import hornby
+        # Attempt to open connection to the real controller
+        hornby.connection_open('/dev/ttyACM0', 9600)
+        return True
+    except ImportError:
+        return False
+    except Exception as e:
+        print("Error while checking real controller availability:", e)
+        return False
+
+# Create the appropriate controller based on availability
+if is_real_controller_available():
+    print(" * Connected to xPressNet controller")
     controller = RealHornbyController('/dev/ttyACM0', 9600)
+else:
+    print(" * Using mock controller")
+    controller = MockHornbyController()
+
+# Periodically check if the real controller becomes available or unavailable
+def controller_availability_check():
+    global controller
+    while True:
+        if is_real_controller_available():
+            if not isinstance(controller, RealHornbyController):
+                print("Real controller detected. Switching to real controller.")
+                controller = RealHornbyController('/dev/ttyACM0', 9600)
+        else:
+            if not isinstance(controller, MockHornbyController):
+                print("Real controller not available. Switching to mock controller.")
+                controller = MockHornbyController()
+        time.sleep(30)  # Check every 30 seconds
+
+# Start controller availability check in a separate thread
+availability_check_thread = threading.Thread(target=controller_availability_check)
+availability_check_thread.daemon = True
+availability_check_thread.start()
 
 # Helper function to wait for a given number of seconds
 def wait(secs):
