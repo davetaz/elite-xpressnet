@@ -52,14 +52,14 @@ class RealHornbyController:
         t = hornby.Train(train_number)
         t.function(function_id, switch)
 
-    def accessory(self, accessory_number, state):
+    def accessory(self, accessory_number, direction):
         import hornby  # Import hornby module only when using the real controller
         # Control the accessory based on the state parameter
-        a = hornby.Accessory(accessory_number, 0)
-        if state == 1:
-            a.activate()
-        elif state == 0:
-            a.deactivate()
+        a = hornby.Accessory(accessory_number)
+        if direction == "FORWARD":
+            a.activateOutput2()
+        elif direction == "REVERSE":
+            a.activateOutput1()
         else:
             print("Invalid state specified.")
 
@@ -75,7 +75,7 @@ class MockHornbyController:
         # Simulate function control (update mock state)
         pass
 
-    def accessory(self, accessory_number,state):
+    def accessory(self, accessory_number,direction):
         # Simulate accessory control (update mock state)
         pass
 
