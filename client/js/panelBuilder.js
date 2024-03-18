@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadStage();
 });
 
-function generateGUID() {
+function _generateGUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       var r = Math.random() * 16 | 0,
           v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -22,7 +22,7 @@ function generateGUID() {
   });
 }
 
-function findElementById(layer, id) {
+function _findElementById(layer, id) {
   var foundElement = null;
 
   // Iterate through all children of the stage's layer
@@ -36,6 +36,43 @@ function findElementById(layer, id) {
   });
 
   return foundElement;
+}
+
+function _createElementBaseGroup(element) {
+  let group = new Konva.Group({
+      id: element.id || _generateGUID(),
+      x: element.x,
+      y: element.y,
+      rotation: element.rotation,
+      width: element.width,
+      height: element.height,
+      draggable: true,
+      name: element.name,
+      type: element.type,
+      switched: element.switched,
+      subtype: element.subtype,
+      color: element.color,
+      save: true,
+      config: element.config
+  });
+  if (element.rotation) {
+    group.rotation(element.rotation);
+  }
+  if (element.vflip) {
+    element.offsetY(element.height());
+    element.scaleY(-element.scaleY());
+  }
+  if (element.hflip) {
+    element.offsetX(element.width());
+    element.scaleX(-element.scaleX());
+  }
+  const selector = new Konva.Rect({
+      width: element.width,
+      height: blockSnapSize,
+      name: 'selector',
+  })
+  group.add(selector);
+  return group;
 }
 
 function createKonvaStage() {
@@ -308,134 +345,89 @@ function addTransformer(stage,layer) {
 
 function setPointDirection(group,switched) {
     var point = group.attrs;
-    const mainShape = group.findOne('.mainShape');
-    const selector = group.findOne('.selector');
-    const entryLine = group.findOne('.entryLine');
-    group.removeChildren();
-    group.add(selector);
-    group.add(mainShape);
-    group.add(entryLine);
-    if (switched) {
-      point.switched = true;
-
-      if (point.subtype == "normal") {
-        const switchLine = new Konva.Path({
-            stroke: 'green',
-            strokeWidth: 2,
-            // This should be the only different thing between the two types of point
-            data: ` M${blockSnapSize-5},${(blockSnapSize / 2)}
-                    C${(blockSnapSize * 2) - 20},${(blockSnapSize / 2)}
-                    ${blockSnapSize * 2},0
-                    ${blockSnapSize * 2},0`,
-        });
-        group.add(switchLine);
-      } else if (point.subtype == "toStraight") {
-        // OLD CODE HERE
-          const switchLine = new Konva.Path({
-            stroke: 'green',
-            strokeWidth: 2,
-            data: `M${30},${(blockSnapSize / 2) + blockSnapSize}
-                   C${35 + 38},${(blockSnapSize / 2) + blockSnapSize - 7}
-                   ${point.width - 23},${(blockSnapSize / 2)}
-                   ${point.width - 1},${(blockSnapSize / 2)}`,
-        });
-        group.add(switchLine);
-      }
+    if (point.subtype === "crossOver") {
+      return setCrossoverDirection(group,switched);
     } else {
-      point.switched = false;
-      if (point.subtype == "normal") {
-        const switchLine = new Konva.Line({
-            stroke: 'green',
-            strokeWidth: 2,
-            points: [blockSnapSize-5, (blockSnapSize / 2), point.width, (blockSnapSize / 2)],
-        });
-        group.add(switchLine)
-      } else if (point.subtype == "toStraight") {
-        const switchLine = new Konva.Line({
-          stroke: 'green',
-          strokeWidth: 2,
-          points: [30, (blockSnapSize / 2) + blockSnapSize, point.width, (blockSnapSize / 2) + blockSnapSize],
-        });
-        group.add(switchLine)
-      }
-    }
-    /*
-    if (switched) {
+      const mainShape = group.findOne('.mainShape');
+      const selector = group.findOne('.selector');
+      const entryLine = group.findOne('.entryLine');
+      group.removeChildren();
+      group.add(selector);
+      group.add(mainShape);
+      group.add(entryLine);
+      if (switched) {
         point.switched = true;
-        const switchLine = new Konva.Path({
-            stroke: 'green',
-            strokeWidth: 2,
-            data: `M${30},${(blockSnapSize / 2) + blockSnapSize}
-                C${35 + 38},${(blockSnapSize / 2) + blockSnapSize - 7}
+
+        if (point.subtype == "normal") {
+          const switchLine = new Konva.Path({
+              stroke: 'green',
+              strokeWidth: 2,
+              // This should be the only different thing between the two types of point
+              data: ` M${blockSnapSize-5},${(blockSnapSize / 2)}
+                      C${(blockSnapSize * 2) - 20},${(blockSnapSize / 2)}
+                      ${blockSnapSize * 2},0
+                      ${blockSnapSize * 2},0`,
+          });
+          group.add(switchLine);
+        } else if (point.subtype == "toStraight") {
+          // OLD CODE HERE
+            const switchLine = new Konva.Path({
+              stroke: 'green',
+              strokeWidth: 2,
+              data: `M${30},${(blockSnapSize / 2) + blockSnapSize}
+                    C${35 + 38},${(blockSnapSize / 2) + blockSnapSize - 7}
                     ${point.width - 23},${(blockSnapSize / 2)}
                     ${point.width - 1},${(blockSnapSize / 2)}`,
-        });
-        group.add(switchLine);
-    } else {
+          });
+          group.add(switchLine);
+        }
+      } else {
         point.switched = false;
-        const switchLine = new Konva.Line({
+        if (point.subtype == "normal") {
+          const switchLine = new Konva.Line({
+              stroke: 'green',
+              strokeWidth: 2,
+              points: [blockSnapSize-5, (blockSnapSize / 2), point.width, (blockSnapSize / 2)],
+          });
+          group.add(switchLine)
+        } else if (point.subtype == "toStraight") {
+          const switchLine = new Konva.Line({
             stroke: 'green',
             strokeWidth: 2,
             points: [30, (blockSnapSize / 2) + blockSnapSize, point.width, (blockSnapSize / 2) + blockSnapSize],
-        });
-        group.add(switchLine)
+          });
+          group.add(switchLine)
+        }
+      }
+      return group;
     }
-    */
-    return group;
 }
 
 function setCrossoverDirection(group,switched) {
-  var point = group.attrs;
+  var element = group.attrs;
   const mainShape = group.findOne('.mainShape');
   const selector = group.findOne('.selector');
-  const entryLine = group.findOne('.entryLine');
   group.removeChildren();
   group.add(selector);
   group.add(mainShape);
-  group.add(entryLine);
+  var halfX = ((blockSnapSize-9) + ((blockSnapSize*2)-9)/2);
+  var halfY = (blockSnapSize/2);
   if (switched) {
-    point.switched = true;
-
-    if (point.subtype == "normal") {
-      const switchLine = new Konva.Path({
-          stroke: 'green',
-          strokeWidth: 2,
-          // This should be the only different thing between the two types of point
-          data: ` M${blockSnapSize-5},${(blockSnapSize / 2)}
-                  C${(blockSnapSize * 2) - 20},${(blockSnapSize / 2)}
-                  ${blockSnapSize * 2},0
-                  ${blockSnapSize * 2},0`,
-      });
-      group.add(switchLine);
-    } else if (point.subtype == "toStraight") {
-      // OLD CODE HERE
-        const switchLine = new Konva.Path({
-          stroke: 'green',
-          strokeWidth: 2,
-          data: `M${30},${(blockSnapSize / 2) + blockSnapSize}
-                 C${35 + 38},${(blockSnapSize / 2) + blockSnapSize - 7}
-                 ${point.width - 23},${(blockSnapSize / 2)}
-                 ${point.width - 1},${(blockSnapSize / 2)}`,
-      });
-      group.add(switchLine);
-    }
+    element.switched = true;
+    const switchLine = new Konva.Line({
+      stroke: 'green',
+      strokeWidth: 2,
+      points: [blockSnapSize, blockSnapSize, (blockSnapSize*2), 0],
+    });
+    group.add(switchLine);
   } else {
-    point.switched = false;
-    if (point.subtype == "normal") {
-      const switchLine = new Konva.Line({
-          stroke: 'green',
-          strokeWidth: 2,
-          points: [blockSnapSize-5, (blockSnapSize / 2), point.width, (blockSnapSize / 2)],
-      });
-      group.add(switchLine)
-    } else if (point.subtype == "toStraight") {
-      const switchLine = new Konva.Line({
+    element.switched = false;
+    const switchLine = new Konva.Line({
         stroke: 'green',
         strokeWidth: 2,
-        points: [30, (blockSnapSize / 2) + blockSnapSize, point.width, (blockSnapSize / 2) + blockSnapSize],
-      });
-      group.add(switchLine)
-    }
+        points: [0, halfY, (blockSnapSize*3), halfY],
+    });
+    group.add(switchLine);
   }
   return group;
 }
@@ -450,7 +442,7 @@ function createPoint(point) {
 
 function createNormalPoint(point) {
   let group = new Konva.Group({
-      id: point.id || generateGUID(),
+      id: point.id || _generateGUID(),
       x: point.x,
       y: point.y,
       rotation: point.rotation,
@@ -540,7 +532,7 @@ function createNormalPoint(point) {
 
 function createPointToStraight(point) {
   let group = new Konva.Group({
-      id: point.id || generateGUID(),
+      id: point.id || _generateGUID(),
       x: point.x,
       y: point.y,
       rotation: point.rotation,
@@ -625,7 +617,7 @@ function createPointToStraight(point) {
 
 function createStraight(element) {
     let group = new Konva.Group({
-        id: element.id || generateGUID(),
+        id: element.id || _generateGUID(),
         x: element.x,
         y: element.y,
         rotation: element.rotation,
@@ -677,43 +669,6 @@ function createStraight(element) {
     return group; // or return shape; if you don't need it inside a group
 }
 
-function _createElementBaseGroup(element) {
-  let group = new Konva.Group({
-      id: element.id || generateGUID(),
-      x: element.x,
-      y: element.y,
-      rotation: element.rotation,
-      width: element.width,
-      height: element.height,
-      draggable: true,
-      name: element.name,
-      type: element.type,
-      subtype: element.subtype,
-      switched: element.switched,
-      color: element.color,
-      save: true,
-      config: element.config
-  });
-  if (element.rotation) {
-    group.rotation(element.rotation);
-  }
-  if (element.vflip) {
-    element.offsetY(element.height());
-    element.scaleY(-element.scaleY());
-  }
-  if (element.hflip) {
-    element.offsetX(element.width());
-    element.scaleX(-element.scaleX());
-  }
-  const selector = new Konva.Rect({
-      width: element.width,
-      height: blockSnapSize,
-      name: 'selector',
-  })
-  group.add(selector);
-  return group;
-}
-
 function createDiagonal(element) {
   const group = _createElementBaseGroup(element);
   const shape = new Konva.Shape({
@@ -740,7 +695,7 @@ function createDiagonal(element) {
 }
 
 function createCrossOver(element) {
-  const group = _createElementBaseGroup(element);
+  let group = _createElementBaseGroup(element);
   const shape = new Konva.Shape({
       stroke: 'gray',
       strokeWidth: 2,
@@ -778,6 +733,8 @@ function createCrossOver(element) {
 
   group.add(shape);
 
+  group = setCrossoverDirection(group,true);
+
   return group; // or return shape; if you don't need it inside a group
 }
 
@@ -803,7 +760,7 @@ function setSignalColor(signalGroup, color) {
 function createSignal(signal) {
     signal.radius = 8;
     var group = new Konva.Group({
-        id: signal.id || generateGUID(),
+        id: signal.id || _generateGUID(),
         x: signal.x,
         y: signal.y,
         width: blockSnapSize,
@@ -876,10 +833,10 @@ function createSignal(signal) {
 }
 
 function createControlPanel(element) {
-  let ID = generateGUID();
+  let ID = _generateGUID();
   let width = blockSnapSize * 6;
   let height = blockSnapSize * 2;
-  const connectedElement = findElementById(layer,element.connectedElement);
+  const connectedElement = _findElementById(layer,element.connectedElement);
   const group = new Konva.Group({
     id: ID,
     x: element.x,
@@ -975,10 +932,11 @@ function addCrossover() {
       y:blockSnapSize,
       width: width,
       height: blockSnapSize,
-      type: "crossOver",
+      type: "point",
+      subtype: "crossOver",
       name: "shape",
       draggable: true,
-      switched: false,
+      switched: true,
   };
   element = createCrossOver(config);
   layer.add(element);
@@ -1132,7 +1090,7 @@ function loadStage() {
 }
 
 function switchPoint(id) {
-  const element = findElementById(layer, id);
+  const element = _findElementById(layer, id);
   if (element) {
     element.attrs.switched = !element.attrs.switched;
     setPointDirection(element, element.attrs.switched);
@@ -1155,7 +1113,7 @@ function switchPoint(id) {
 }
 
 function setPointState(id, state) {
-  const element = findElementById(layer, id);
+  const element = _findElementById(layer, id);
   if (element) {
       if (state === "normal" || state === "switched") {
           element.attrs.switched = (state === "switched");
@@ -1182,7 +1140,7 @@ function setPointState(id, state) {
 }
 
 function changeSignal(id, color) {
-  const element = findElementById(layer, id);
+  const element = _findElementById(layer, id);
   if (element) {
     const config = element.attrs.config || { Aspects: [] };
     let dccNumber, direction;
@@ -1223,9 +1181,9 @@ function renderControllers() {
       var controller = document.getElementById(id);
       controller.style.display = 'block';
     } else {
-      const element = findElementById(layer, id);
+      const element = _findElementById(layer, id);
       if (element) {
-        const connectedElement = findElementById(layer, element.attrs.connectedElement);
+        const connectedElement = _findElementById(layer, element.attrs.connectedElement);
         var elementName = connectedElement.attrs.type + ": ";
         if (connectedElement.attrs.config) {
           elementName += connectedElement.attrs.config.Name;
@@ -1341,9 +1299,9 @@ function hideControllers() {
 function showConnectors() {
   for(var i=0;i<controllers.length;i++) {
     id = "connector-" + controllers[i];
-    const connector = findElementById(layer, id);
-    const element1 = findElementById(layer, controllers[i]);
-    const element2 = findElementById(layer,element1.attrs.connectedElement);
+    const connector = _findElementById(layer, id);
+    const element1 = _findElementById(layer, controllers[i]);
+    const element2 = _findElementById(layer,element1.attrs.connectedElement);
     if (connector) {
       connector.points([element1.x() + (element1.width() / 2), element1.y() + (element1.height() / 2), element2.x() + (element2.width() / 2), element2.y() + (element2.height() / 2)]);
     } else {
@@ -1355,7 +1313,7 @@ function showConnectors() {
 function hideConnectors() {
   for (var i = 0; i < controllers.length; i++) {
       var id = "connector-" + controllers[i];
-      const connector = findElementById(layer, id);
+      const connector = _findElementById(layer, id);
       if (connector) {
           connector.remove();
       }
@@ -1363,7 +1321,7 @@ function hideConnectors() {
 }
 
 function saveElementData(elementId,values) {
-  const element = findElementById(layer, elementId);
+  const element = _findElementById(layer, elementId);
   delete values._id;
   element.attrs.config = values;
   $('#res').html('<p>' + element.attrs.type + ' updated</p>');
@@ -1374,7 +1332,7 @@ function configureElement(elementId,controllerID) {
   //Make sure no nodes are selected before typing on keyboard!
   transformer.nodes([]);
   const controller = document.getElementById(controllerID);
-  const element = findElementById(layer, elementId);
+  const element = _findElementById(layer, elementId);
 
   // Get the popup template
   const popupTemplate = document.getElementById('popupTemplate');
