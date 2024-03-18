@@ -7,6 +7,7 @@ from flask_cors import CORS
 import configparser  # Import the configparser module
 
 import time
+import threading
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)  # Enable CORS for the entire application
@@ -32,10 +33,12 @@ train_state = {}
 
 class RealHornbyController:
     def __init__(self, device_path, baud_rate):
-        import hornby  # Import hornby module only when using the real controller
-        # Open a serial connection with the Hornby Elite DCC controller
-        hornby.connection_open(device_path, baud_rate)
-        print(" * Hornby controller connected")
+        try:
+            import hornby  # Import hornby module only when using the real controller
+            # Open a serial connection with the Hornby Elite DCC controller
+            hornby.connection_open(device_path, baud_rate)
+        except ImportError:
+            raise ImportError("Hornby library not installed. Please install it to use the real controller.")
 
     def throttle(self, train_number, speed, direction):
         import hornby  # Import hornby module only when using the real controller
@@ -49,20 +52,19 @@ class RealHornbyController:
         t = hornby.Train(train_number)
         t.function(function_id, switch)
 
-    def accessory(self, accessory_number, direction):
+    def accessory(self, accessory_number, state):
         import hornby  # Import hornby module only when using the real controller
         # Control the accessory based on the state parameter
-        a = hornby.Accessory(accessory_number)
-        if direction == "FORWARD":
-            a.activateOutput2()
-        elif direction == "REVERSE":
-            a.activateOutput1()
+        a = hornby.Accessory(accessory_number, 0)
+        if state == 1:
+            a.activate()
+        elif state == 0:
+            a.deactivate()
         else:
             print("Invalid state specified.")
 
 class MockHornbyController:
     def __init__(self):
-        print(" * Using MOCK Controller")
         pass
 
     def throttle(self, train_number, speed, direction):
@@ -73,15 +75,49 @@ class MockHornbyController:
         # Simulate function control (update mock state)
         pass
 
-    def accessory(self, accessory_number,direction):
+    def accessory(self, accessory_number,state):
         # Simulate accessory control (update mock state)
         pass
 
-# Create the appropriate controller based on configuration
-if USE_MOCK_CONTROLLER:
-    controller = MockHornbyController()
-else:
+# Check if the real controller is available
+def is_real_controller_available():
+    try:
+        import hornby
+        # Attempt to open connection to the real controller
+        hornby.connection_open('/dev/ttyACM0', 9600)
+        return True
+    except ImportError:
+        return False
+    except Exception as e:
+        print("Error while checking real controller availability:", e)
+        return False
+
+# Create the appropriate controller based on availability
+if is_real_controller_available():
+    print(" * Connected to xPressNet controller")
     controller = RealHornbyController('/dev/ttyACM0', 9600)
+else:
+    print(" * Using mock controller")
+    controller = MockHornbyController()
+
+# Periodically check if the real controller becomes available or unavailable
+def controller_availability_check():
+    global controller
+    while True:
+        if is_real_controller_available():
+            if not isinstance(controller, RealHornbyController):
+                print("Real controller detected. Switching to real controller.")
+                controller = RealHornbyController('/dev/ttyACM0', 9600)
+        else:
+            if not isinstance(controller, MockHornbyController):
+                print("Real controller not available. Switching to mock controller.")
+                controller = MockHornbyController()
+        time.sleep(30)  # Check every 30 seconds
+
+# Start controller availability check in a separate thread
+availability_check_thread = threading.Thread(target=controller_availability_check)
+availability_check_thread.daemon = True
+availability_check_thread.start()
 
 # Helper function to wait for a given number of seconds
 def wait(secs):
