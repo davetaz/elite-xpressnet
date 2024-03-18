@@ -112,7 +112,7 @@ def controller_availability_check():
             if not isinstance(controller, MockHornbyController):
                 print("Real controller not available. Switching to mock controller.")
                 controller = MockHornbyController()
-        time.sleep(30)  # Check every 30 seconds
+        time.sleep(10)  # Check every 30 seconds
 
 # Start controller availability check in a separate thread
 availability_check_thread = threading.Thread(target=controller_availability_check)
@@ -125,6 +125,14 @@ def wait(secs):
 
 def parse_json(data):
     return json.loads(json_util.dumps(data))
+
+# Add a route to GET controller state
+@app.route('/controller', methods=['GET'])
+def get_controller_state():
+    if is_real_controller_available():
+        return jsonify({"status": "online"})
+    else:
+        return jsonify({"status": "offline"})
 
 # Add an OPTIONS route for the same URL path
 @app.route('/train/', methods=['OPTIONS'])

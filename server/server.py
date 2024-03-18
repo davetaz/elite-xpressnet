@@ -91,7 +91,7 @@ def controller_availability_check():
             if not isinstance(controller, MockHornbyController):
                 print("Real controller not available. Switching to mock controller.")
                 controller = MockHornbyController()
-        time.sleep(30)  # Check every 30 seconds
+        time.sleep(10)  # Check every 30 seconds
 
 # Start controller availability check in a separate thread
 availability_check_thread = threading.Thread(target=controller_availability_check)
@@ -101,6 +101,14 @@ availability_check_thread.start()
 # Helper function to wait for a given number of seconds
 def wait(secs):
     time.sleep(secs)
+
+# Add a route to GET controller state
+@app.route('/controller', methods=['GET'])
+def get_controller_state():
+    if is_real_controller_available():
+        return jsonify({"status": "online"})
+    else:
+        return jsonify({"status": "offline"})
 
 # API endpoint to control the throttle of a train
 @app.route('/train/<int:train_number>/throttle', methods=['PUT', 'GET'])
