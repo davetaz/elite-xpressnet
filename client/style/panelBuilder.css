@@ -1,3 +1,44 @@
 canvas {
     border: 1px solid gray;
 }
+.content {
+    text-align: center;
+}
+.buttons-container {
+    position: absolute;
+    top: 4px; /* Adjust as needed */
+    right: 10px; /* Adjust as needed */
+    width: 300px;
+    padding: 10px;
+    background-color: inherit;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: move;
+}
+.buttons-content {
+    margin-top: 10px;
+}
+.buttons-content button {
+    width: 100%;
+    min-height: 62px;
+}
+.title-bar {
+    cursor: move;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.panel-title {
+    font-weight: bold;
+}
+.toggle-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    font-weight: bold;
+    font-size: 18px;
+    padding: 0 5px;
+    width: 30px;
+    height: 30px;
+}

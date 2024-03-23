@@ -8,12 +8,46 @@ var blockSnapSize = 37.5;
 var controllers = [];
 // Call createKonvaStage when the page is fully loaded
 document.addEventListener("DOMContentLoaded", function () {
+    _initialiseButtonsContainer();
     stage = createKonvaStage();
     const layer = stage.getLayers()[0];
     addTransformer(stage,layer);
     loadStage();
 });
 
+function _initialiseButtonsContainer() {
+  var isDragging = false;
+  var buttonsContainer = document.getElementById('buttonsContainer');
+  var toggleBtn = document.querySelector('.toggle-btn');
+  var buttonsContent = document.querySelector('.buttons-content');
+
+  buttonsContainer.addEventListener('mousedown', function(event) {
+      isDragging = true;
+      offsetX = event.clientX - buttonsContainer.getBoundingClientRect().left;
+      offsetY = event.clientY - buttonsContainer.getBoundingClientRect().top;
+  });
+
+  document.addEventListener('mousemove', function(event) {
+      if (isDragging) {
+          buttonsContainer.style.left = (event.clientX - offsetX) + 'px';
+          buttonsContainer.style.top = (event.clientY - offsetY) + 'px';
+      }
+  });
+
+  document.addEventListener('mouseup', function() {
+      isDragging = false;
+  });
+
+  toggleBtn.addEventListener('click', function() {
+      if (buttonsContent.style.display === 'none') {
+          buttonsContent.style.display = 'block';
+          toggleBtn.textContent = '-';
+      } else {
+          buttonsContent.style.display = 'none';
+          toggleBtn.textContent = '+';
+      }
+  });
+}
 //Initialisation functions
 function createKonvaStage() {
     const stage = new Konva.Stage({

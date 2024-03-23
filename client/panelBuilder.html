@@ -8,7 +8,7 @@
         <meta http-equiv="Expires" content="Thu, 01 Jan 1970 00:00:00 GMT">
         <title>Layout builder</title>
 
-        <script type="text/javascript" src="libraries/jquery-1.11.1.min.js"></script>
+        <script type="text/javascript" src="libraries/jquery-3.7.1.min.js"></script>
         <script type="text/javascript" src="libraries/konva.min.js"></script>
         <script type="text/javascript" src="libraries/underscore.js"></script>
         <script type="text/javascript" src="libraries/jquery-ui.js"></script>
@@ -33,20 +33,31 @@
     <section class="content">
         <div id="trackCanvas" style="width:1024px; height:600px; display: inline-block; position: relative;">
         </div>
-        <buttons style="vertical-align: top; width: 200px; height: 400px; display: inline-block;">
-            <button id="addPoint" onclick="addPoint('normal')">Add Point</button>
-            <button id="addPointToStraight" onclick="addPoint('toStraight')">Add Point (to straight)</button>
-            <button id="addPointToSiding" onclick="addPoint('toSiding')">Add Point (to siding)</button>
-            <button id="addCrossover" onclick="addPoint('crossOver')">Add Crossover</button>
-            <button id="addStraightShort" onclick="addStraight('short')">Add Straight (short)</button>
-            <button id="addStraightLong" onclick="addStraight('long')">Add Straight (long)</button>
-            <button id="addDiagonal" onclick="addDiagonal()">Add Diagonal</button>
-            <button id="addCurveConnection" onclick="addCurve(1)">Add Curve (Radius 1)</button>
-            <button id="addSignal" onclick="addSignal('red')">Add Signal</button><br/>
-            <button id="addControlElement" onclick="addControlElement()">Add Control Panel</button><br/>
-            <button id="savePanel" onclick="saveStage()">Save panel</button><br/>
-        </buttons>
     </section>
+
+    <div id="buttonsContainer" class="buttons-container">
+        <div class="title-bar">
+            <span class="panel-title">Panel Editor</span>
+            <button class="toggle-btn">-</button>
+        </div>
+        <div class="buttons-content" style="display: block;">
+            <div style="column-count: 2;">
+                <button id="addPoint" onclick="addPoint('normal')">Add Point</button>
+                <button id="addPointToStraight" onclick="addPoint('toStraight')">Add Point (to straight)</button>
+                <button id="addPointToSiding" onclick="addPoint('toSiding')">Add Point (to siding)</button>
+                <button id="addCrossover" onclick="addPoint('crossOver')">Add Crossover</button>
+                <button id="addStraightShort" onclick="addStraight('short')">Add Straight (short)</button>
+                <button id="addStraightLong" onclick="addStraight('long')">Add Straight (long)</button>
+                <button id="addDiagonal" onclick="addDiagonal()">Add Diagonal</button>
+                <button id="addCurveConnection" onclick="addCurve(1)">Add Curve (Radius 1)</button>
+                <button id="addSignal" onclick="addSignal('red')">Add Signal</button>
+                <button id="addControlElement" onclick="addControlElement()">Add Control Panel</button>
+            </div>
+            <div style="column-count: 1;">
+                <button id="savePanel" onclick="saveStage()">Save panel</button>
+            </div>
+        </div>
+    </div>
 
     <template id="popupTemplate">
         <div class="popup-overlay" style="position: absolute; top: 20px; left: 20px; width: calc(100% - 40px); height: calc(100% - 40px); background-color: rgba(0, 0, 0, 0.9); z-index: 9999; max-height: calc(100% - 40px); overflow-y: scroll;">
