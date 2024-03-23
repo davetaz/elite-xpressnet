@@ -177,7 +177,7 @@ function addTransformer(stage,layer) {
         transformer.nodes(nodes);
       }
   });
-  
+
   // Attach a double-click event listener to the shape
   stage.on('dblclick', function() {
     const selectedShapes = transformer.nodes();
@@ -188,7 +188,7 @@ function addTransformer(stage,layer) {
       }
     }
   });
-  
+
   document.addEventListener('keydown', function (event) {
     if (event.key === 'r' || event.key === 'R') {
       _rotateSelectedShapes();
@@ -212,7 +212,7 @@ function _deleteSelectedShapes() {
 
   // Check if there are selected shapes
   if (selectedShapes.length > 0) {
-    
+
     // Iterate through the selected shapes and remove them
     selectedShapes.forEach(function (shape) {
       shape.destroy(); // Remove the shape
@@ -630,8 +630,8 @@ function _createPointToSiding(element) {
 
           // bottom right
           ctx.moveTo(blockSnapSize+9,blockSnapSize)
-          ctx.bezierCurveTo(blockSnapSize+9,blockSnapSize, 
-                            halfX, halfY+4, 
+          ctx.bezierCurveTo(blockSnapSize+9,blockSnapSize,
+                            halfX, halfY+4,
                             (blockSnapSize*2)+9,halfY + 5);
           ctx.lineTo(blockSnapSize * 3, halfY + 5)
 
@@ -761,14 +761,14 @@ function createCurve(element) {
           var halfY = (blockSnapSize/2);
           //bottom left
           ctx.moveTo(blockSnapSize-9,blockSnapSize);
-          ctx.bezierCurveTo(blockSnapSize-9,blockSnapSize, 
-                            blockSnapSize+9, halfY-4, 
+          ctx.bezierCurveTo(blockSnapSize-9,blockSnapSize,
+                            blockSnapSize+9, halfY-4,
                             blockSnapSize*2,halfY - 5);
 
           // bottom right
           ctx.moveTo(blockSnapSize+9,blockSnapSize)
-          ctx.bezierCurveTo(blockSnapSize+9,blockSnapSize, 
-                            halfX, halfY+4, 
+          ctx.bezierCurveTo(blockSnapSize+9,blockSnapSize,
+                            halfX, halfY+4,
                             blockSnapSize*2,halfY + 5);
 
           ctx.strokeShape(shape);
@@ -893,7 +893,7 @@ function addPoint(type) {
       switched: true,
       draggable: true,
   };
-  element = createPoint(point);  
+  element = createPoint(point);
   layer.add(element);
 }
 
@@ -984,7 +984,7 @@ function addControlElement() {
   layer.add(element);
 }
 
-// Operation functions 
+// Operation functions
 function showLogMessage(message) {
   const logElement = document.getElementById('log');
   logElement.innerText = message;
@@ -1079,62 +1079,6 @@ function _getQueryParam(name) {
   return urlParams.get(name);
 }
 
-function renderControllers() {
-  for(var i=0;i<controllers.length;i++) {
-    id = controllers[i];
-    if (document.getElementById(id)) {
-      var controller = document.getElementById(id);
-      controller.style.display = 'block';
-    } else {
-      const element = _findElementById(layer, id);
-      if (element) {
-        const connectedElement = _findElementById(layer, element.attrs.connectedElement);
-        var elementName = connectedElement.attrs.type + ": ";
-        if (connectedElement.attrs.config) {
-          elementName += connectedElement.attrs.config.Name;
-        } else {
-          elementName += connectedElement.attrs.id.split('-').pop();
-        }
-        if (connectedElement.attrs.type === "point") {
-          var switchedLabel = "Switched";
-          var normalLabel = "Normal";
-          if (connectedElement.attrs.config) {
-            switchedLabel = connectedElement.attrs.config.Switched;
-            normalLabel = connectedElement.attrs.config.Normal;
-          }
-          const controllerHTML = `
-            <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
-              <button onclick="configureElement('${connectedElement.attrs.id}','${element.id()}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
-                <i class="fas fa-cog"></i>
-              </button>
-              <p style="padding: 0; margin: 0;">${elementName}</p>
-              <button onclick="setPointState('${connectedElement.attrs.id}','normal')">${normalLabel}</button>
-              <button onclick="setPointState('${connectedElement.attrs.id}','switched')">${switchedLabel}</button>
-            </div>
-          `;
-          document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
-        }
-        if (connectedElement.attrs.type === "signal") {
-          const config = connectedElement.attrs.config;
-
-          var controllerHTML = `
-            <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
-              <button onclick="configureElement('${connectedElement.attrs.id}','${element.id()}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
-                <i class="fas fa-cog"></i>
-              </button>
-              <p style="padding: 0; margin: 0;">${elementName}</p>`;
-
-          controllerHTML += _generateSignalButtons(config,connectedElement.attrs.id) + "</div>";
-
-          document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
-        }
-      } else {
-        console.error('Element not found');
-      }
-    }
-  }
-}
-
 function _generateSignalButtons(config,id) {
   const buttons = [];
   if (!config) {
@@ -1190,7 +1134,67 @@ function _generateSignalButtons(config,id) {
   return buttons.join('');
 }
 
+function showControllers() {
+  document.getElementById('showControllers').style.display = 'none';
+  document.getElementById('hideControllers').style.display = 'inline-block';
+  for(var i=0;i<controllers.length;i++) {
+    id = controllers[i];
+    if (document.getElementById(id)) {
+      var controller = document.getElementById(id);
+      controller.style.display = 'block';
+    } else {
+      const element = _findElementById(layer, id);
+      if (element) {
+        const connectedElement = _findElementById(layer, element.attrs.connectedElement);
+        var elementName = connectedElement.attrs.type + ": ";
+        if (connectedElement.attrs.config) {
+          elementName += connectedElement.attrs.config.Name;
+        } else {
+          elementName += connectedElement.attrs.id.split('-').pop();
+        }
+        if (connectedElement.attrs.type === "point") {
+          var switchedLabel = "Switched";
+          var normalLabel = "Normal";
+          if (connectedElement.attrs.config) {
+            switchedLabel = connectedElement.attrs.config.Switched;
+            normalLabel = connectedElement.attrs.config.Normal;
+          }
+          const controllerHTML = `
+            <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
+              <button onclick="configureElement('${connectedElement.attrs.id}','${element.id()}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
+                <i class="fas fa-cog"></i>
+              </button>
+              <p style="padding: 0; margin: 0;">${elementName}</p>
+              <button onclick="setPointState('${connectedElement.attrs.id}','normal')">${normalLabel}</button>
+              <button onclick="setPointState('${connectedElement.attrs.id}','switched')">${switchedLabel}</button>
+            </div>
+          `;
+          document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
+        }
+        if (connectedElement.attrs.type === "signal") {
+          const config = connectedElement.attrs.config;
+
+          var controllerHTML = `
+            <div id="${element.id()}" style="background: gray; position: absolute; left: ${element.x()}px; top: ${element.y()}px; width: ${element.width()}px; height: ${element.height()}px; text-align: center;">
+              <button onclick="configureElement('${connectedElement.attrs.id}','${element.id()}')" style="position: absolute; padding: 0px; top: 0px; right: 0px; background: none; border: none; cursor: pointer;">
+                <i class="fas fa-cog"></i>
+              </button>
+              <p style="padding: 0; margin: 0;">${elementName}</p>`;
+
+          controllerHTML += _generateSignalButtons(config,connectedElement.attrs.id) + "</div>";
+
+          document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
+        }
+      } else {
+        console.error('Element not found');
+      }
+    }
+  }
+}
+
 function hideControllers() {
+  document.getElementById('hideControllers').style.display = 'none';
+  document.getElementById('showControllers').style.display = 'inline-block';
   for (var i = 0; i < controllers.length; i++) {
       var id = controllers[i];
       var controller = document.getElementById(id);
@@ -1201,6 +1205,8 @@ function hideControllers() {
 }
 
 function showConnectors() {
+  document.getElementById('showConnectors').style.display = 'none';
+  document.getElementById('hideConnectors').style.display = 'inline-block';
   for(var i=0;i<controllers.length;i++) {
     id = "connector-" + controllers[i];
     const connector = _findElementById(layer, id);
@@ -1215,6 +1221,8 @@ function showConnectors() {
 }
 
 function hideConnectors() {
+  document.getElementById('hideConnectors').style.display = 'none';
+  document.getElementById('showConnectors').style.display = 'inline-block';
   for (var i = 0; i < controllers.length; i++) {
       var id = "connector-" + controllers[i];
       const connector = _findElementById(layer, id);
@@ -1267,7 +1275,7 @@ function configureElement(elementId,controllerID) {
                   controller.remove();
                   var inputObject = values;
                   saveElementData(elementId,inputObject);
-                  renderControllers();
+                  showControllers();
                   document.getElementsByClassName('popup-overlay')[0].remove();
               }
           }
