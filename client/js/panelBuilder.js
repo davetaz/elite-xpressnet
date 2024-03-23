@@ -14,6 +14,289 @@ document.addEventListener("DOMContentLoaded", function () {
     loadStage();
 });
 
+//Initialisation functions
+function createKonvaStage() {
+    const stage = new Konva.Stage({
+        container: 'trackCanvas',
+        width: 1024,
+        height: 600,
+    });
+
+    layer = new Konva.Layer();
+    stage.add(layer);
+    var width = 1024;
+    var height = 600;
+    var gridLayer = new Konva.Layer();
+    var padding = blockSnapSize;
+    for (var i = 0; i < width / padding; i++) {
+      gridLayer.add(new Konva.Line({
+        points: [Math.round(i * padding) + 0.5, 0, Math.round(i * padding) + 0.5, height],
+        stroke: '#ddd',
+        strokeWidth: 0.2,
+        dash: [5, 5]
+      }));
+    }
+
+    gridLayer.add(new Konva.Line({points: [0,0,10,10]}));
+    for (var j = 0; j < height / padding; j++) {
+      gridLayer.add(new Konva.Line({
+        points: [0, Math.round(j * padding), width, Math.round(j * padding)],
+        stroke: '#ddd',
+        strokeWidth: 0.2,
+        dash: [5, 5]
+      }));
+    }
+    stage.add(gridLayer);
+
+    return stage;
+}
+
+function addTransformer(stage,layer) {
+  transformer = new Konva.Transformer();
+  layer.add(transformer);
+      //var shapes = stage.find('.shape');
+      // by default select all shapes
+      //transformer.nodes(shapes);
+  transformer.rotationSnaps([0, 90, 180, 270]);
+  transformer.resizeEnabled(false);
+
+  // add a new feature, lets add ability to draw selection rectangle
+  var selectionRectangle = new Konva.Rect({
+    fill: 'rgba(0,0,255,0.5)',
+    visible: false,
+  });
+  layer.add(selectionRectangle);
+
+  var x1, y1, x2, y2;
+  var selecting = false;
+  stage.on('mousedown touchstart', (e) => {
+    // do nothing if we mousedown on any shape
+    if (e.target !== stage) {
+      return;
+    }
+    e.evt.preventDefault();
+    x1 = stage.getPointerPosition().x;
+    y1 = stage.getPointerPosition().y;
+    x2 = stage.getPointerPosition().x;
+    y2 = stage.getPointerPosition().y;
+
+    selectionRectangle.width(0);
+    selectionRectangle.height(0);
+    selecting = true;
+  });
+
+  stage.on('mousemove touchmove', (e) => {
+        // do nothing if we didn't start selection
+    if (!selecting) {
+      return;
+    }
+    e.evt.preventDefault();
+    x2 = stage.getPointerPosition().x;
+    y2 = stage.getPointerPosition().y;
+
+    selectionRectangle.setAttrs({
+      visible: true,
+      x: Math.min(x1, x2),
+      y: Math.min(y1, y2),
+      width: Math.abs(x2 - x1),
+      height: Math.abs(y2 - y1),
+    });
+  });
+
+  stage.on('mouseup touchend', (e) => {
+        // do nothing if we didn't start selection
+    selecting = false;
+    if (!selectionRectangle.visible()) {
+      if (!e.target.hasName('shape') && !e.target.hasName('selector')) {
+        return;
+      }
+          // Get the actual target based on the name
+      const actualTarget = e.target.hasName('selector') ? e.target.parent : e.target;
+      actualTarget.position({
+        x: Math.round(actualTarget.x() / blockSnapSize) * blockSnapSize,
+        y: Math.round(actualTarget.y() / blockSnapSize) * blockSnapSize,
+      });
+      stage.batchDraw();
+      return;
+    }
+    e.evt.preventDefault();
+        // update visibility in timeout, so we can check it in click event
+    selectionRectangle.visible(false);
+    var shapes = stage.find('.shape');
+    var box = selectionRectangle.getClientRect();
+    var selected = shapes.filter((shape) =>
+      Konva.Util.haveIntersection(box, shape.getClientRect())
+      );
+    transformer.nodes(selected);
+  });
+
+  // clicks should select/deselect shapes
+  stage.on('click tap', function (e) {
+        // if we are selecting with rect, do nothing
+    if (selectionRectangle.visible()) {
+      return;
+    }
+
+        // if click on empty area - remove all selections
+    if (e.target === stage) {
+      transformer.nodes([]);
+      return;
+    }
+
+    var actualTarget = e.target;
+    while (actualTarget.parent && !actualTarget.hasName('shape')) {
+      actualTarget = actualTarget.parent;
+    }
+        // Check if e.target has the name 'shape' or 'child'
+    if (!actualTarget.hasName('shape')) {
+        //if (!e.target.hasName('shape') && !e.target.hasName('selector')) {
+      return;
+    }
+
+        // Get the actual target based on the name
+        //var actualTarget = e.target.hasName('selector') ? e.target.parent : e.target;
+
+        // do we pressed shift or ctrl?
+    const metaPressed = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
+    const isSelected = transformer.nodes().indexOf(actualTarget) >= 0;
+
+    if (!metaPressed && !isSelected) {
+        // if no key pressed and the node is not selected
+        // select just one
+      transformer.nodes([actualTarget]);
+    } else if (metaPressed && isSelected) {
+        // if we pressed keys and node was selected
+        // we need to remove it from selection:
+        const nodes = transformer.nodes().slice(); // use slice to have new copy of array
+        // remove node from array
+        nodes.splice(nodes.indexOf(actualTarget), 1);
+        transformer.nodes(nodes);
+      } else if (metaPressed && !isSelected) {
+        // add the node into selection
+        const nodes = transformer.nodes().concat([actualTarget]);
+        transformer.nodes(nodes);
+      }
+  });
+  
+  // Attach a double-click event listener to the shape
+  stage.on('dblclick', function() {
+    const selectedShapes = transformer.nodes();
+    if (selectedShapes.length == 1) {
+      const element = selectedShapes[0];
+      if (element.attrs.type == "point") {
+        switchPoint(element.attrs.id);
+      }
+    }
+  });
+  
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'r' || event.key === 'R') {
+      _rotateSelectedShapes();
+    }
+    if (event.key === 'v' || event.key === 'V') {
+      _verticalFlipSelectedShapes();
+    }
+    if (event.key === 'h' || event.key === 'H') {
+      _horizontalFlipSelectedShapes();
+    }
+    if (event.keyCode === 46 || event.keyCode === 8) {
+      _deleteSelectedShapes();
+    }
+  });
+}
+
+// Internal transformer functions
+function _deleteSelectedShapes() {
+  // Get the selected shapes from the transformer
+  const selectedShapes = transformer.nodes();
+
+  // Check if there are selected shapes
+  if (selectedShapes.length > 0) {
+    
+    // Iterate through the selected shapes and remove them
+    selectedShapes.forEach(function (shape) {
+      shape.destroy(); // Remove the shape
+    });
+
+    // Clear the selection in the transformer
+    transformer.nodes([]);
+
+    // Redraw the layer to reflect the removal
+    layer.batchDraw();
+  }
+}
+
+function _verticalFlipSelectedShapes() {
+// Check if there are selected shapes
+  const selectedShapes = transformer.nodes();
+  if (selectedShapes.length > 0) {
+            // Iterate through selected shapes and rotate each one
+    selectedShapes.forEach((shape) => {
+      shape.offsetY(shape.height());
+      if (shape.attrs.vflip) {
+        shape.offsetY(0);
+        shape.attrs.vflip = false;
+      } else {
+        shape.attrs.vflip = true;
+      }
+              //vertical flip
+      shape.scaleY(-shape.scaleY());
+    });
+
+            // Update the transformer to reflect the changes
+    transformer.forceUpdate();
+            //layer.batchDraw(); // Redraw the layer
+  }
+}
+
+function _horizontalFlipSelectedShapes() {
+  // Check if there are selected shapes
+  const selectedShapes = transformer.nodes();
+  if (selectedShapes.length > 0) {
+    // Iterate through selected shapes and rotate each one
+    selectedShapes.forEach((shape) => {
+      shape.offsetX(shape.width());
+      if (shape.attrs.hflip) {
+        shape.offsetX(0);
+        shape.attrs.hflip = false;
+      } else {
+        shape.attrs.hflip = true;
+      }
+      //horizonal flip
+      shape.scaleX(-shape.scaleX());
+    });
+
+    // Update the transformer to reflect the changes
+    transformer.forceUpdate();
+    //layer.batchDraw(); // Redraw the layer
+  }
+}
+
+function _rotateSelectedShapes() {
+  const selectedShapes = transformer.nodes();
+  selectedShapes.forEach((shape) => {
+    const width = shape.width();
+    const height = shape.height();
+    const rotation = shape.rotation();
+
+            // Save the current offsets
+    const offsetX = shape.offsetX();
+    const offsetY = shape.offsetY();
+
+            // Set the offsets to half of the width and height of the shape
+    shape.offsetX(width / 2);
+            //shape.offsetY(height / 2);
+
+            // Rotate 90 degrees clockwise
+    shape.rotation(rotation + 90);
+
+            // Reset the offsets
+            //shape.offsetX(offsetX);
+            //shape.offsetY(offsetY);
+  });
+}
+
+// Internal konva control functions for rendering
 function _generateGUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       var r = Math.random() * 16 | 0,
@@ -53,6 +336,8 @@ function _createElementBaseGroup(element) {
       subtype: element.subtype,
       color: element.color,
       save: true,
+      vflip: element.vflip,
+      hflip: element.hflip,
       config: element.config
   });
   if (element.rotation) {
@@ -75,345 +360,118 @@ function _createElementBaseGroup(element) {
   return group;
 }
 
-function createKonvaStage() {
-    const stage = new Konva.Stage({
-        container: 'trackCanvas',
-        width: 1024,
-        height: 600,
-    });
-
-    layer = new Konva.Layer();
-    stage.add(layer);
-    var width = 1024;
-    var height = 600;
-    var gridLayer = new Konva.Layer();
-    var padding = blockSnapSize;
-    for (var i = 0; i < width / padding; i++) {
-      gridLayer.add(new Konva.Line({
-        points: [Math.round(i * padding) + 0.5, 0, Math.round(i * padding) + 0.5, height],
-        stroke: '#ddd',
-        strokeWidth: 0.2,
-        dash: [5, 5]
-      }));
-    }
-
-    gridLayer.add(new Konva.Line({points: [0,0,10,10]}));
-    for (var j = 0; j < height / padding; j++) {
-      gridLayer.add(new Konva.Line({
-        points: [0, Math.round(j * padding), width, Math.round(j * padding)],
-        stroke: '#ddd',
-        strokeWidth: 0.2,
-        dash: [5, 5]
-      }));
-    }
-    stage.add(gridLayer);
-
-    return stage;
-}
-
-function addTransformer(stage,layer) {
-      transformer = new Konva.Transformer();
-      layer.add(transformer);
-      //var shapes = stage.find('.shape');
-      // by default select all shapes
-      //transformer.nodes(shapes);
-      transformer.rotationSnaps([0, 90, 180, 270]);
-      transformer.resizeEnabled(false);
-
-      // add a new feature, lets add ability to draw selection rectangle
-      var selectionRectangle = new Konva.Rect({
-        fill: 'rgba(0,0,255,0.5)',
-        visible: false,
-      });
-      layer.add(selectionRectangle);
-
-      var x1, y1, x2, y2;
-      var selecting = false;
-      stage.on('mousedown touchstart', (e) => {
-        // do nothing if we mousedown on any shape
-        if (e.target !== stage) {
-          return;
-        }
-        e.evt.preventDefault();
-        x1 = stage.getPointerPosition().x;
-        y1 = stage.getPointerPosition().y;
-        x2 = stage.getPointerPosition().x;
-        y2 = stage.getPointerPosition().y;
-
-        selectionRectangle.width(0);
-        selectionRectangle.height(0);
-        selecting = true;
-      });
-
-      stage.on('mousemove touchmove', (e) => {
-        // do nothing if we didn't start selection
-        if (!selecting) {
-          return;
-        }
-        e.evt.preventDefault();
-        x2 = stage.getPointerPosition().x;
-        y2 = stage.getPointerPosition().y;
-
-        selectionRectangle.setAttrs({
-          visible: true,
-          x: Math.min(x1, x2),
-          y: Math.min(y1, y2),
-          width: Math.abs(x2 - x1),
-          height: Math.abs(y2 - y1),
-        });
-      });
-
-      stage.on('mouseup touchend', (e) => {
-        // do nothing if we didn't start selection
-        selecting = false;
-        if (!selectionRectangle.visible()) {
-          if (!e.target.hasName('shape') && !e.target.hasName('selector')) {
-            return;
-          }
-          // Get the actual target based on the name
-          const actualTarget = e.target.hasName('selector') ? e.target.parent : e.target;
-          actualTarget.position({
-            x: Math.round(actualTarget.x() / blockSnapSize) * blockSnapSize,
-            y: Math.round(actualTarget.y() / blockSnapSize) * blockSnapSize,
-          });
-          stage.batchDraw();
-          return;
-        }
-        e.evt.preventDefault();
-        // update visibility in timeout, so we can check it in click event
-        selectionRectangle.visible(false);
-        var shapes = stage.find('.shape');
-        var box = selectionRectangle.getClientRect();
-        var selected = shapes.filter((shape) =>
-          Konva.Util.haveIntersection(box, shape.getClientRect())
-        );
-        transformer.nodes(selected);
-      });
-
-      // clicks should select/deselect shapes
-    stage.on('click tap', function (e) {
-        // if we are selecting with rect, do nothing
-        if (selectionRectangle.visible()) {
-        return;
-        }
-
-        // if click on empty area - remove all selections
-        if (e.target === stage) {
-        transformer.nodes([]);
-        return;
-        }
-
-        var actualTarget = e.target;
-        while (actualTarget.parent && !actualTarget.hasName('shape')) {
-          actualTarget = actualTarget.parent;
-        }
-        // Check if e.target has the name 'shape' or 'child'
-        if (!actualTarget.hasName('shape')) {
-        //if (!e.target.hasName('shape') && !e.target.hasName('selector')) {
-          return;
-        }
-
-        // Get the actual target based on the name
-        //var actualTarget = e.target.hasName('selector') ? e.target.parent : e.target;
-
-        // do we pressed shift or ctrl?
-        const metaPressed = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
-        const isSelected = transformer.nodes().indexOf(actualTarget) >= 0;
-
-        if (!metaPressed && !isSelected) {
-        // if no key pressed and the node is not selected
-        // select just one
-        transformer.nodes([actualTarget]);
-        } else if (metaPressed && isSelected) {
-        // if we pressed keys and node was selected
-        // we need to remove it from selection:
-        const nodes = transformer.nodes().slice(); // use slice to have new copy of array
-        // remove node from array
-        nodes.splice(nodes.indexOf(actualTarget), 1);
-        transformer.nodes(nodes);
-        } else if (metaPressed && !isSelected) {
-        // add the node into selection
-        const nodes = transformer.nodes().concat([actualTarget]);
-        transformer.nodes(nodes);
-        }
-    });
-    // Attach a double-click event listener to the shape
-    stage.on('dblclick', function() {
-      const selectedShapes = transformer.nodes();
-      if (selectedShapes.length == 1) {
-        const element = selectedShapes[0];
-        if (element.attrs.type == "point") {
-          switchPoint(element.attrs.id);
-        }
-      }
-    });
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'r' || event.key === 'R') {
-          const selectedShapes = transformer.nodes();
-          selectedShapes.forEach((shape) => {
-            const width = shape.width();
-            const height = shape.height();
-            const rotation = shape.rotation();
-
-            // Save the current offsets
-            const offsetX = shape.offsetX();
-            const offsetY = shape.offsetY();
-
-            // Set the offsets to half of the width and height of the shape
-            shape.offsetX(width / 2);
-            //shape.offsetY(height / 2);
-
-            // Rotate 90 degrees clockwise
-            shape.rotation(rotation + 90);
-
-            // Reset the offsets
-            //shape.offsetX(offsetX);
-            //shape.offsetY(offsetY);
-          });
-      }
-    });
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'h' || event.key === 'H') {
-          // Check if there are selected shapes
-          const selectedShapes = transformer.nodes();
-          if (selectedShapes.length > 0) {
-            // Iterate through selected shapes and rotate each one
-            selectedShapes.forEach((shape) => {
-              shape.offsetX(shape.width());
-              if (shape.attrs.hflip) {
-                shape.offsetX(0);
-                shape.attrs.hflip = false;
-              } else {
-                shape.attrs.hflip = true;
-              }
-              //horizonal flip
-              shape.scaleX(-shape.scaleX());
-            });
-
-            // Update the transformer to reflect the changes
-            transformer.forceUpdate();
-            //layer.batchDraw(); // Redraw the layer
-          }
-        }
-    });
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'v' || event.key === 'V') {
-          // Check if there are selected shapes
-          const selectedShapes = transformer.nodes();
-          if (selectedShapes.length > 0) {
-            // Iterate through selected shapes and rotate each one
-            selectedShapes.forEach((shape) => {
-              shape.offsetY(shape.height());
-              if (shape.attrs.vflip) {
-                shape.offsetY(0);
-                shape.attrs.vflip = false;
-              } else {
-                shape.attrs.vflip = true;
-              }
-              //vertical flip
-              shape.scaleY(-shape.scaleY());
-            });
-
-            // Update the transformer to reflect the changes
-            transformer.forceUpdate();
-            //layer.batchDraw(); // Redraw the layer
-          }
-        }
-    });
-    document.addEventListener('keydown', function (event) {
-        // Check if the "Delete" key (key code 46) is pressed
-        if (event.keyCode === 46) {
-          // Get the selected shapes from the transformer
-          const selectedShapes = transformer.nodes();
-
-          // Check if there are selected shapes
-          if (selectedShapes.length > 0) {
-            // Iterate through the selected shapes and remove them
-            selectedShapes.forEach(function (shape) {
-              shape.destroy(); // Remove the shape
-            });
-
-            // Clear the selection in the transformer
-            transformer.nodes([]);
-
-            // Redraw the layer to reflect the removal
-            layer.batchDraw();
-          }
-        }
-    });
-}
-
+// Render Konva point type element directions
 function setPointDirection(group,switched) {
     var point = group.attrs;
-    if (point.subtype === "crossOver") {
-      return setCrossoverDirection(group,switched);
-    } else {
-      const mainShape = group.findOne('.mainShape');
-      const selector = group.findOne('.selector');
-      const entryLine = group.findOne('.entryLine');
-      group.removeChildren();
-      group.add(selector);
-      group.add(mainShape);
+    const mainShape = group.findOne('.mainShape');
+    const selector = group.findOne('.selector');
+    const entryLine = group.findOne('.entryLine') || null;
+    group.removeChildren();
+    group.add(selector);
+    group.add(mainShape);
+    if (entryLine) {
       group.add(entryLine);
-      if (switched) {
-        point.switched = true;
+    }
+    if (switched) {
+      point.switched = true;
+    } else {
+      point.switched = false;
+    }
 
-        if (point.subtype == "normal") {
-          const switchLine = new Konva.Path({
-              stroke: 'green',
-              strokeWidth: 2,
-              // This should be the only different thing between the two types of point
-              data: ` M${blockSnapSize-5},${(blockSnapSize / 2)}
-                      C${(blockSnapSize * 2) - 20},${(blockSnapSize / 2)}
-                      ${blockSnapSize * 2},0
-                      ${blockSnapSize * 2},0`,
-          });
-          group.add(switchLine);
-        } else if (point.subtype == "toStraight") {
-          // OLD CODE HERE
-            const switchLine = new Konva.Path({
-              stroke: 'green',
-              strokeWidth: 2,
-              data: `M${30},${(blockSnapSize / 2) + blockSnapSize}
-                    C${35 + 38},${(blockSnapSize / 2) + blockSnapSize - 7}
-                    ${point.width - 23},${(blockSnapSize / 2)}
-                    ${point.width - 1},${(blockSnapSize / 2)}`,
-          });
-          group.add(switchLine);
-        }
-      } else {
-        point.switched = false;
-        if (point.subtype == "normal") {
-          const switchLine = new Konva.Line({
-              stroke: 'green',
-              strokeWidth: 2,
-              points: [blockSnapSize-5, (blockSnapSize / 2), point.width, (blockSnapSize / 2)],
-          });
-          group.add(switchLine)
-        } else if (point.subtype == "toStraight") {
-          const switchLine = new Konva.Line({
-            stroke: 'green',
-            strokeWidth: 2,
-            points: [30, (blockSnapSize / 2) + blockSnapSize, point.width, (blockSnapSize / 2) + blockSnapSize],
-          });
-          group.add(switchLine)
-        }
-      }
-      return group;
+    if (point.subtype === "crossOver") {
+      return _setCrossoverDirection(group,switched);
+    } else if (point.subtype === "normal") {
+      return _setNormalDirection(group,switched);
+    } else if (point.subtype === "toStraight") {
+      return _setToStraightDirection(group,switched);
+    } else if (point.subtype === "toSiding") {
+      return _setToSidingDirection(group,switched);
     }
 }
 
-function setCrossoverDirection(group,switched) {
+function _setNormalDirection(group,switched) {
+  var point = group.attrs;
+  if (switched) {
+    const switchLine = new Konva.Path({
+      stroke: 'green',
+      strokeWidth: 2,
+              // This should be the only different thing between the two types of point
+      data: ` M${blockSnapSize-5},${(blockSnapSize / 2)}
+      C${(blockSnapSize * 2) - 20},${(blockSnapSize / 2)}
+      ${blockSnapSize * 2},0
+      ${blockSnapSize * 2},0`,
+    });
+    group.add(switchLine);
+  } else {
+    const switchLine = new Konva.Line({
+      stroke: 'green',
+      strokeWidth: 2,
+      points: [blockSnapSize-5, (blockSnapSize / 2), point.width, (blockSnapSize / 2)],
+    });
+    group.add(switchLine)
+  }
+  return group;
+}
+
+function _setToStraightDirection(group,switched) {
+  var point = group.attrs;
+  if (switched) {
+    const switchLine = new Konva.Path({
+      stroke: 'green',
+      strokeWidth: 2,
+      data: `M${30},${(blockSnapSize / 2) + blockSnapSize}
+      C${35 + 38},${(blockSnapSize / 2) + blockSnapSize - 7}
+      ${point.width - 23},${(blockSnapSize / 2)}
+      ${point.width - 1},${(blockSnapSize / 2)}`,
+    });
+    group.add(switchLine);
+  } else {
+    const switchLine = new Konva.Line({
+      stroke: 'green',
+      strokeWidth: 2,
+      points: [30, (blockSnapSize / 2) + blockSnapSize, point.width, (blockSnapSize / 2) + blockSnapSize],
+    });
+    group.add(switchLine)
+  }
+  return group;
+}
+
+function _setToSidingDirection(group,switched) {
   var element = group.attrs;
-  const mainShape = group.findOne('.mainShape');
-  const selector = group.findOne('.selector');
-  group.removeChildren();
-  group.add(selector);
-  group.add(mainShape);
   var halfX = ((blockSnapSize-9) + ((blockSnapSize*2)-9)/2);
   var halfY = (blockSnapSize/2);
   if (switched) {
-    element.switched = true;
+    const switchLine = new Konva.Path({
+      stroke: 'green',
+      strokeWidth: 2,
+      data: `M${blockSnapSize},${blockSnapSize}
+             C${halfX-5},${halfY+1}
+              ${blockSnapSize * 2},${(blockSnapSize / 2)}
+              ${(blockSnapSize * 2)+9},${(blockSnapSize / 2)}`,
+    });
+    const exitLine = new Konva.Line({
+      stroke: 'green',
+      strokeWidth: 2,
+      points: [(blockSnapSize * 2)+9, blockSnapSize / 2, (blockSnapSize*3), blockSnapSize / 2],
+    })
+    group.add(switchLine);
+    group.add(exitLine);
+  } else {
+    const switchLine = new Konva.Line({
+      stroke: 'green',
+      strokeWidth: 2,
+      points: [blockSnapSize, blockSnapSize, (blockSnapSize*2), 0],
+    });
+    group.add(switchLine);
+  }
+  return group;
+}
+
+function _setCrossoverDirection(group,switched) {
+  var element = group.attrs;
+  var halfX = ((blockSnapSize-9) + ((blockSnapSize*2)-9)/2);
+  var halfY = (blockSnapSize/2);
+  if (switched) {
     const switchLine = new Konva.Line({
       stroke: 'green',
       strokeWidth: 2,
@@ -421,7 +479,6 @@ function setCrossoverDirection(group,switched) {
     });
     group.add(switchLine);
   } else {
-    element.switched = false;
     const switchLine = new Konva.Line({
         stroke: 'green',
         strokeWidth: 2,
@@ -432,49 +489,21 @@ function setCrossoverDirection(group,switched) {
   return group;
 }
 
+// Render points
 function createPoint(point) {
-    if (point.subtype == "toStraight") {
-      return createPointToStraight(point);
-    } else {
-      return createNormalPoint(point);
+    if (point.subtype === "toStraight") {
+      return _createPointToStraight(point);
+    } else if (point.subtype === "normal") {
+      return _createNormalPoint(point);
+    } else if (point.subtype === "toSiding") {
+      return _createPointToSiding(point);
+    } else if (point.subtype === "crossOver") {
+      return _createCrossOver(point)
     }
 }
 
-function createNormalPoint(point) {
-  let group = new Konva.Group({
-      id: point.id || _generateGUID(),
-      x: point.x,
-      y: point.y,
-      rotation: point.rotation,
-      width: point.width,
-      height: point.height,
-      draggable: true,
-      name: point.name,
-      type: point.type,
-      subtype: point.subtype,
-      save: true,
-      switched: point.switched,
-      vflip: point.vflip,
-      hflip: point.hflip,
-      config: point.config
-  })
-  if (point.rotation) {
-    group.rotation(point.rotation);
-  }
-  if (point.vflip) {
-    group.offsetY(group.height());
-    group.scaleY(-group.scaleY());
-  }
-  if (point.hflip) {
-    group.offsetX(group.width());
-    group.scaleX(-group.scaleX());
-  }
-  const selector = new Konva.Rect({
-      width: point.width,
-      height: point.height,
-      name: 'selector',
-  })
-  group.add(selector);
+function _createNormalPoint(point) {
+  let group = _createElementBaseGroup(point);
   const mainShape = new Konva.Shape({
       stroke: 'gray',
       strokeWidth: 2,
@@ -530,41 +559,8 @@ function createNormalPoint(point) {
   return group;
 }
 
-function createPointToStraight(point) {
-  let group = new Konva.Group({
-      id: point.id || _generateGUID(),
-      x: point.x,
-      y: point.y,
-      rotation: point.rotation,
-      width: point.width,
-      height: point.height,
-      draggable: true,
-      name: point.name,
-      type: point.type,
-      subtype: point.subtype,
-      save: true,
-      switched: point.switched,
-      vflip: point.vflip,
-      hflip: point.hflip,
-      config: point.config
-  })
-  if (point.rotation) {
-    group.rotation(point.rotation);
-  }
-  if (point.vflip) {
-    group.offsetY(group.height());
-    group.scaleY(-group.scaleY());
-  }
-  if (point.hflip) {
-    group.offsetX(group.width());
-    group.scaleX(-group.scaleX());
-  }
-  const selector = new Konva.Rect({
-      width: point.width,
-      height: point.height,
-      name: 'selector',
-  })
-  group.add(selector);
+function _createPointToStraight(point) {
+  let group = _createElementBaseGroup(point);
   const mainShape = new Konva.Shape({
       stroke: 'gray',
       strokeWidth: 2,
@@ -615,37 +611,93 @@ function createPointToStraight(point) {
   return group;
 }
 
+function _createPointToSiding(element) {
+  let group = _createElementBaseGroup(element);
+  const shape = new Konva.Shape({
+      stroke: 'gray',
+      strokeWidth: 2,
+      width: element.width,
+      height: element.height,
+      name: 'mainShape',
+      sceneFunc: function (ctx, shape) {
+          ctx.beginPath();
+
+          var halfX = ((blockSnapSize-9) + ((blockSnapSize*2)-9)/2);
+          var halfY = (blockSnapSize/2);
+          //bottom left
+          ctx.moveTo(blockSnapSize-9,blockSnapSize);
+          ctx.lineTo((blockSnapSize*2)-9,0);
+
+          // bottom right
+          ctx.moveTo(blockSnapSize+9,blockSnapSize)
+          ctx.bezierCurveTo(blockSnapSize+9,blockSnapSize, 
+                            halfX, halfY+4, 
+                            (blockSnapSize*2)+9,halfY + 5);
+          ctx.lineTo(blockSnapSize * 3, halfY + 5)
+
+          // top right
+          ctx.moveTo((blockSnapSize*3),halfY - 5)
+          ctx.lineTo(halfX+9, halfY-5);
+          ctx.lineTo((blockSnapSize*2)+9,0);
+
+          ctx.strokeShape(shape);
+      }
+  });
+
+  group.add(shape);
+
+  group = setPointDirection(group,true);
+
+  return group; // or return shape; if you don't need it inside a group
+}
+
+function _createCrossOver(element) {
+  let group = _createElementBaseGroup(element);
+  const shape = new Konva.Shape({
+      stroke: 'gray',
+      strokeWidth: 2,
+      width: element.width,
+      height: element.height,
+      name: 'mainShape',
+      sceneFunc: function (ctx, shape) {
+          ctx.beginPath();
+
+          //bottom left
+          ctx.moveTo(blockSnapSize-9,blockSnapSize);
+          var halfX = ((blockSnapSize-9) + ((blockSnapSize*2)-9)/2);
+          var halfY = (blockSnapSize/2);
+          ctx.lineTo(halfX - 18, halfY + 5);
+          ctx.lineTo(0,halfY + 5)
+
+          // top left
+          ctx.moveTo(0, (blockSnapSize / 2) - 5);
+          ctx.lineTo(halfX - 9, halfY - 5);
+          ctx.lineTo((blockSnapSize*2)-9,0);
+
+          // bottom right
+          ctx.moveTo(blockSnapSize+9,blockSnapSize)
+          ctx.lineTo(halfX, halfY + 5);
+          ctx.lineTo((blockSnapSize*3),halfY + 5)
+
+          // top right
+          ctx.moveTo((blockSnapSize*3),halfY - 5)
+          ctx.lineTo(halfX+9, halfY-5);
+          ctx.lineTo((blockSnapSize*2)+9,0);
+
+          ctx.strokeShape(shape);
+      }
+  });
+
+  group.add(shape);
+
+  group = setPointDirection(group,true);
+
+  return group; // or return shape; if you don't need it inside a group
+}
+
+// Render plain line elements
 function createStraight(element) {
-    let group = new Konva.Group({
-        id: element.id || _generateGUID(),
-        x: element.x,
-        y: element.y,
-        rotation: element.rotation,
-        width: element.width,
-        height: element.height,
-        draggable: true,
-        name: element.name,
-        type: element.type,
-        save: true,
-        config: element.config
-    });
-    if (element.rotation) {
-      group.rotation(element.rotation);
-    }
-    if (element.vflip) {
-      element.offsetY(element.height());
-      element.scaleY(-element.scaleY());
-    }
-    if (element.hflip) {
-      element.offsetX(element.width());
-      element.scaleX(-element.scaleX());
-    }
-    const selector = new Konva.Rect({
-        width: element.width,
-        height: blockSnapSize,
-        name: 'selector',
-    })
-    group.add(selector);
+    let group = _createElementBaseGroup(element);
     const shape = new Konva.Shape({
         stroke: 'gray',
         strokeWidth: 2,
@@ -694,7 +746,7 @@ function createDiagonal(element) {
   return group; // or return shape; if you don't need it inside a group
 }
 
-function createCrossOver(element) {
+function createCurve(element) {
   let group = _createElementBaseGroup(element);
   const shape = new Konva.Shape({
       stroke: 'gray',
@@ -705,27 +757,19 @@ function createCrossOver(element) {
       sceneFunc: function (ctx, shape) {
           ctx.beginPath();
 
-          //bottom left
-          ctx.moveTo(blockSnapSize-9,blockSnapSize);
           var halfX = ((blockSnapSize-9) + ((blockSnapSize*2)-9)/2);
           var halfY = (blockSnapSize/2);
-          ctx.lineTo(halfX - 18, halfY + 5);
-          ctx.lineTo(0,halfY + 5)
-
-          // top left
-          ctx.moveTo(0, (blockSnapSize / 2) - 5);
-          ctx.lineTo(halfX - 9, halfY - 5);
-          ctx.lineTo((blockSnapSize*2)-9,0);
+          //bottom left
+          ctx.moveTo(blockSnapSize-9,blockSnapSize);
+          ctx.bezierCurveTo(blockSnapSize-9,blockSnapSize, 
+                            blockSnapSize+9, halfY-4, 
+                            blockSnapSize*2,halfY - 5);
 
           // bottom right
           ctx.moveTo(blockSnapSize+9,blockSnapSize)
-          ctx.lineTo(halfX, halfY + 5);
-          ctx.lineTo((blockSnapSize*3),halfY + 5)
-
-          // top right
-          ctx.moveTo((blockSnapSize*3),halfY - 5)
-          ctx.lineTo(halfX+9, halfY-5);
-          ctx.lineTo((blockSnapSize*2)+9,0);
+          ctx.bezierCurveTo(blockSnapSize+9,blockSnapSize, 
+                            halfX, halfY+4, 
+                            blockSnapSize*2,halfY + 5);
 
           ctx.strokeShape(shape);
       }
@@ -733,105 +777,54 @@ function createCrossOver(element) {
 
   group.add(shape);
 
-  group = setCrossoverDirection(group,true);
-
   return group; // or return shape; if you don't need it inside a group
 }
 
-function setSignalColor(signalGroup, color) {
-  const leftCircle = signalGroup.findOne('.leftCircle');
-  const rightCircle = signalGroup.findOne('.rightCircle');
-
-  // Update fill color based on the provided color
-  if (color === "dyellow") {
-      leftCircle.fill("yellow");
-      rightCircle.fill("yellow");
-  } else {
-      leftCircle.fill((color === "red" || color === "yellow" || color === "green") ? color : '');
-      rightCircle.fill('');
-  }
-
-  // Update the color attribute
-  signalGroup.attrs.color = color;
-
-  return signalGroup;
-}
-
+// Render signals and sensors
 function createSignal(signal) {
-    signal.radius = 8;
-    var group = new Konva.Group({
-        id: signal.id || _generateGUID(),
-        x: signal.x,
-        y: signal.y,
-        width: blockSnapSize,
-        height: blockSnapSize,
-        rotation: signal.rotation,
-        vflip: signal.vflip,
-        hflip: signal.hflip,
-        draggable: true,
-        name: signal.name,
-        type: signal.type,
-        color: signal.color,
-        save: true,
-        config: signal.config
-    });
-    if (signal.rotation) {
-      group.rotation(signal.rotation);
-    }
-    if (signal.vflip) {
-      group.offsetY(group.height());
-      group.scaleY(-group.scaleY());
-    }
-    if (signal.hflip) {
-      group.offsetX(group.width());
-      group.scaleX(-group.scaleX());
-    }
-    // Draw the signal's box (rectangle)
-    const rect = new Konva.Rect({
-        width: blockSnapSize,
-        height: blockSnapSize,
-        name: 'selector',
-    });
-    group.add(rect);
-    // Draw the signal's box (rectangle)
-    const outline = new Konva.Rect({
-      x: blockSnapSize - (signal.radius * 2.5),
-      y: 0,
-      width: signal.radius * 2.5,
-      height: signal.radius * 1.5,
+  signal.width = blockSnapSize;
+  signal.height = blockSnapSize;
+  signal.radius = 8;
+  group = _createElementBaseGroup(signal);
+  const outline = new Konva.Rect({
+    x: blockSnapSize - (signal.radius * 2.5),
+    y: 0,
+    width: signal.radius * 2.5,
+    height: signal.radius * 1.5,
       stroke: 'gray', // Outline color for the box
       strokeWidth: 1,
       name: 'outline',
     });
-    group.add(outline);
+  group.add(outline);
 
     // Draw the left circle
-    const leftCircle = new Konva.Circle({
-        name: 'leftCircle',
-        x: (blockSnapSize / 2) + (signal.radius / 2),
-        y: (signal.radius / 2) + 2,
-        radius: signal.radius / 2,
-        fill: '',
-        fill: (signal.color == "dyellow") ? signal.color : '',
-    });
-    group.add(leftCircle);
+  const leftCircle = new Konva.Circle({
+    name: 'leftCircle',
+    x: (blockSnapSize / 2) + (signal.radius / 2),
+    y: (signal.radius / 2) + 2,
+    radius: signal.radius / 2,
+    fill: '',
+    fill: (signal.color == "dyellow") ? signal.color : '',
+  });
+  group.add(leftCircle);
 
     // Draw the right circle
-    const rightCircle = new Konva.Circle({
-        name: 'rightCircle',
-        x: (blockSnapSize / 2) + (signal.radius * 2) - 3,
-        y: (signal.radius / 2) + 2.2,
-        radius: signal.radius / 2,
-        fill: '',
-        fill: (signal.color == "red" || signal.color == "yellow" || signal.color == "green") ? signal.color : '',
-    });
-    group.add(rightCircle);
+  const rightCircle = new Konva.Circle({
+    name: 'rightCircle',
+    x: (blockSnapSize / 2) + (signal.radius * 2) - 3,
+    y: (signal.radius / 2) + 2.2,
+    radius: signal.radius / 2,
+    fill: '',
+    fill: (signal.color == "red" || signal.color == "yellow" || signal.color == "green") ? signal.color : '',
+  });
+  group.add(rightCircle);
 
-    group = setSignalColor(group,signal.color);
+  group = setSignalColor(group,signal.color);
 
-    return group;
+  return group;
 }
 
+// Render control elements
 function createControlPanel(element) {
   let ID = _generateGUID();
   let width = blockSnapSize * 6;
@@ -883,10 +876,11 @@ function createConnector(element1,element2) {
   layer.batchDraw();
 }
 
+// Configuration functions for addng new elements new elements
 function addPoint(type) {
-  height = blockSnapSize * 2;
-  if (type == "normal") {
-    height = blockSnapSize;
+  height = blockSnapSize;
+  if (type == "toStraight") {
+    height = blockSnapSize * 2;
   }
   const point = {
       x: blockSnapSize,
@@ -899,18 +893,14 @@ function addPoint(type) {
       switched: true,
       draggable: true,
   };
-  if (type == "normal") {
-    element = createNormalPoint(point);
-  } else {
-    element = createPointToStraight(point);
-  }
+  element = createPoint(point);  
   layer.add(element);
 }
 
 function addStraight(length) {
-    let width = blockSnapSize * 2;
+    let width = blockSnapSize;
     if (length == "long") {
-        width = width * 2;
+        width = width * 4;
     }
     const striat = {
         x:blockSnapSize,
@@ -925,20 +915,19 @@ function addStraight(length) {
     layer.add(element);
 }
 
-function addCrossover() {
-  let width = blockSnapSize * 3;
+function addCurve(radius) {
+  height = blockSnapSize * radius;
   const config = {
-      x:blockSnapSize,
-      y:blockSnapSize,
-      width: width,
-      height: blockSnapSize,
-      type: "point",
-      subtype: "crossOver",
+      x: blockSnapSize,
+      y: blockSnapSize,
+      width: blockSnapSize * 2,
+      height: height,
+      type: "plainline",
       name: "shape",
+      subtype: "curve",
       draggable: true,
-      switched: true,
   };
-  element = createCrossOver(config);
+  element = createCurve(config);
   layer.add(element);
 }
 
@@ -969,14 +958,6 @@ function addSignal(color) {
     layer.add(element);
 }
 
-function showLogMessage(message) {
-  const logElement = document.getElementById('log');
-  logElement.innerText = message;
-  setTimeout(() => {
-    logElement.innerText = ''; // Clear message after 5 seconds
-  }, 5000);
-}
-
 function addControlElement() {
   const selectedShapes = transformer.nodes();
   if (selectedShapes.length == 0) {
@@ -1001,6 +982,15 @@ function addControlElement() {
   };
   element = createControlPanel(cp);
   layer.add(element);
+}
+
+// Operation functions 
+function showLogMessage(message) {
+  const logElement = document.getElementById('log');
+  logElement.innerText = message;
+  setTimeout(() => {
+    logElement.innerText = ''; // Clear message after 5 seconds
+  }, 5000);
 }
 
 function saveStage() {
@@ -1041,14 +1031,9 @@ function saveStage() {
   }
 }
 
-function getQueryParam(name) {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get(name);
-}
-
 function loadStage() {
   // Get the panelId query parameter from the URL
-  panelId = getQueryParam('panelId');
+  panelId = _getQueryParam('panelId');
 
   // Check if panelId is not null or undefined
   if (panelId) {
@@ -1089,89 +1074,9 @@ function loadStage() {
   }
 }
 
-function switchPoint(id) {
-  const element = _findElementById(layer, id);
-  if (element) {
-    element.attrs.switched = !element.attrs.switched;
-    setPointDirection(element, element.attrs.switched);
-    const switchedDirection = element.attrs.config.SwitchedDirection;
-          var direction = switchedDirection;
-          if (switched) {
-            direction = switchedDirection.toUpperCase();
-          } else {
-            if (switchedDirection.toUpperCase() == "FORWARD") {
-              direction = "REVERSE";
-            } else {
-              direction = "FORWARD";
-            }
-          }
-          setAccessoryDirection(element.attrs.config.DCCNumber,direction);
-    saveStage();
-  } else {
-    console.error(`Element with id ${id} not found`);
-  }
-}
-
-function setPointState(id, state) {
-  const element = _findElementById(layer, id);
-  if (element) {
-      if (state === "normal" || state === "switched") {
-          element.attrs.switched = (state === "switched");
-          setPointDirection(element, element.attrs.switched);
-          const switchedDirection = element.attrs.config.SwitchedDirection;
-          var direction = switchedDirection;
-          if (element.attrs.switched) {
-            direction = switchedDirection.toUpperCase();
-          } else {
-            if (switchedDirection.toUpperCase() == "FORWARD") {
-              direction = "REVERSE";
-            } else {
-              direction = "FORWARD";
-            }
-          }
-          setAccessoryDirection(element.attrs.config.DCCNumber,direction);
-          saveStage();
-      } else {
-          console.error('Invalid state provided');
-      }
-  } else {
-      console.error(`Element with id ${id} not found`);
-  }
-}
-
-function changeSignal(id, color) {
-  const element = _findElementById(layer, id);
-  if (element) {
-    const config = element.attrs.config || { Aspects: [] };
-    let dccNumber, direction;
-
-    // Map colors from config to colors used in the code
-    const colorMap = {
-      "red": "Red",
-      "yellow": "Amber",
-      "green": "Green",
-      "dyellow": "Amber (second)"
-    };
-
-    // Find the aspect in config that matches the given color
-    const matchingAspect = config.Aspects.find(aspect => aspect.Colour === colorMap[color]);
-
-    // If a matching aspect is found, retrieve dccNumber and direction
-    if (matchingAspect) {
-      dccNumber = matchingAspect.DCCNumber;
-      direction = matchingAspect['Aspect direction'].toUpperCase();
-
-      // Set accessory direction using retrieved values
-      setAccessoryDirection(dccNumber, direction);
-    } else {
-      console.error(`Aspect with color ${color} not found in the configuration.`);
-    }
-    // Set signal color and save stage
-    setSignalColor(element, color);
-    saveStage();
-  } else {
-    console.error(`Element with id ${id} not found`);
-  }
+function _getQueryParam(name) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(name);
 }
 
 function renderControllers() {
@@ -1219,7 +1124,7 @@ function renderControllers() {
               </button>
               <p style="padding: 0; margin: 0;">${elementName}</p>`;
 
-          controllerHTML += generateSignalButtons(config,connectedElement.attrs.id) + "</div>";
+          controllerHTML += _generateSignalButtons(config,connectedElement.attrs.id) + "</div>";
 
           document.getElementById('trackCanvas').insertAdjacentHTML('beforeend', controllerHTML);
         }
@@ -1230,7 +1135,7 @@ function renderControllers() {
   }
 }
 
-function generateSignalButtons(config,id) {
+function _generateSignalButtons(config,id) {
   const buttons = [];
   if (!config) {
     config = {
@@ -1283,7 +1188,6 @@ function generateSignalButtons(config,id) {
     });
   });
   return buttons.join('');
-
 }
 
 function hideControllers() {
@@ -1380,6 +1284,112 @@ function configureElement(elementId,controllerID) {
 
   // Append the popup content to the trackCanvas div
   document.getElementById('trackCanvas').appendChild(popupContent);
+}
+
+// Render signal colour
+function setSignalColor(signalGroup, color) {
+  const leftCircle = signalGroup.findOne('.leftCircle');
+  const rightCircle = signalGroup.findOne('.rightCircle');
+
+  // Update fill color based on the provided color
+  if (color === "dyellow") {
+      leftCircle.fill("yellow");
+      rightCircle.fill("yellow");
+  } else {
+      leftCircle.fill((color === "red" || color === "yellow" || color === "green") ? color : '');
+      rightCircle.fill('');
+  }
+
+  // Update the color attribute
+  signalGroup.attrs.color = color;
+
+  return signalGroup;
+}
+
+// DCC operation functions
+function switchPoint(id) {
+  const element = _findElementById(layer, id);
+  if (element) {
+    element.attrs.switched = !element.attrs.switched;
+    setPointDirection(element, element.attrs.switched);
+    const switchedDirection = element.attrs.config.SwitchedDirection;
+          var direction = switchedDirection;
+          if (switched) {
+            direction = switchedDirection.toUpperCase();
+          } else {
+            if (switchedDirection.toUpperCase() == "FORWARD") {
+              direction = "REVERSE";
+            } else {
+              direction = "FORWARD";
+            }
+          }
+          setAccessoryDirection(element.attrs.config.DCCNumber,direction);
+    saveStage();
+  } else {
+    console.error(`Element with id ${id} not found`);
+  }
+}
+
+function setPointState(id, state) {
+  const element = _findElementById(layer, id);
+  if (element) {
+      if (state === "normal" || state === "switched") {
+          element.attrs.switched = (state === "switched");
+          setPointDirection(element, element.attrs.switched);
+          const switchedDirection = element.attrs.config.SwitchedDirection;
+          var direction = switchedDirection;
+          if (element.attrs.switched) {
+            direction = switchedDirection.toUpperCase();
+          } else {
+            if (switchedDirection.toUpperCase() == "FORWARD") {
+              direction = "REVERSE";
+            } else {
+              direction = "FORWARD";
+            }
+          }
+          setAccessoryDirection(element.attrs.config.DCCNumber,direction);
+          saveStage();
+      } else {
+          console.error('Invalid state provided');
+      }
+  } else {
+      console.error(`Element with id ${id} not found`);
+  }
+}
+
+function changeSignal(id, color) {
+  const element = _findElementById(layer, id);
+  if (element) {
+    const config = element.attrs.config || { Aspects: [] };
+    let dccNumber, direction;
+
+    // Map colors from config to colors used in the code
+    const colorMap = {
+      "red": "Red",
+      "yellow": "Amber",
+      "green": "Green",
+      "dyellow": "Amber (second)"
+    };
+
+    // Find the aspect in config that matches the given color
+    const matchingAspect = config.Aspects.find(aspect => aspect.Colour === colorMap[color]);
+
+    // If a matching aspect is found, retrieve dccNumber and direction
+    if (matchingAspect) {
+      dccNumber = matchingAspect.DCCNumber;
+      direction = matchingAspect['Aspect direction'].toUpperCase();
+
+      // Set accessory direction using retrieved values
+      setAccessoryDirection(dccNumber, direction);
+    } else {
+      console.error(`Aspect with color ${color} not found in the configuration.`);
+    }
+    // Set signal color and save stage
+    setSignalColor(element, color);
+    saveStage();
+  } else {
+    console.error(`Element with id ${id} not found`);
+  }
 }
 
 function setAccessoryDirection(dccNumber, direction) {

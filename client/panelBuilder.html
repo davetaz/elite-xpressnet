@@ -8,15 +8,15 @@
         <meta http-equiv="Expires" content="Thu, 01 Jan 1970 00:00:00 GMT">
         <title>Layout builder</title>
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
-        <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+        <script type="text/javascript" src="libraries/jquery-1.11.1.min.js"></script>
+        <script type="text/javascript" src="libraries/konva.min.js"></script>
+        <script type="text/javascript" src="libraries/underscore.js"></script>
+        <script type="text/javascript" src="libraries/jquery-ui.js"></script>
+        <script type="text/javascript" src="libraries/jsv.js"></script>
+        <script type="text/javascript" src="libraries/jsonform.js"></script>
 
-        <script type="text/javascript" src="js/underscore.js"></script>
-        <script type="text/javascript" src="js/jquery-ui.js"></script>
-        <script type="text/javascript" src="js/jsv.js"></script>
-        <script type="text/javascript" src="js/jsonform.js"></script>
+        <link rel="stylesheet" href="style/ext/water.css">
+        <link rel="stylesheet" href="style/ext/all.min.css" crossorigin="anonymous" />
 
         <link rel="stylesheet" href="style/main.css">
         <link rel="stylesheet" href="style/buttons.css">
@@ -24,7 +24,10 @@
     </head>
 <body>
     <nav id="topNav" class="topNav">
-
+        <button id="showControllers" onclick="renderControllers()">Show controllers</button>
+        <button id="hideControllers" onclick="hideControllers()" >Hide controllers</button>
+        <button id="showConnectors" onclick="showConnectors()">Show connectors</button>
+        <button id="hideConnectors" onclick="hideConnectors()" >Hide connectors</button>
     </nav>
 
     <section class="content">
@@ -33,16 +36,14 @@
         <buttons style="vertical-align: top; width: 200px; height: 400px; display: inline-block;">
             <button id="addPoint" onclick="addPoint('normal')">Add Point</button>
             <button id="addPointToStraight" onclick="addPoint('toStraight')">Add Point (to straight)</button>
-            <button id="addDiagonal" onclick="addDiagonal()">Add Diagonal</button>
-            <button id="addCrossover" onclick="addCrossover()">Add Crossover</button>
+            <button id="addPointToSiding" onclick="addPoint('toSiding')">Add Point (to siding)</button>
+            <button id="addCrossover" onclick="addPoint('crossOver')">Add Crossover</button>
             <button id="addStraightShort" onclick="addStraight('short')">Add Straight (short)</button>
             <button id="addStraightLong" onclick="addStraight('long')">Add Straight (long)</button>
-            <button id="addSignal" onclick="addSignal('Red')">Add Signal</button><br/>
+            <button id="addDiagonal" onclick="addDiagonal()">Add Diagonal</button>
+            <button id="addCurveConnection" onclick="addCurve(1)">Add Curve (Radius 1)</button>
+            <button id="addSignal" onclick="addSignal('red')">Add Signal</button><br/>
             <button id="addControlElement" onclick="addControlElement()">Add Control Panel</button><br/>
-            <button id="showControllers" onclick="renderControllers()">Show controllers</button><br/>
-            <button id="hideControllers" onclick="hideControllers()" >Hide controllers</button><br/>
-            <button id="showConnectors" onclick="showConnectors()">Show connectors</button><br/>
-            <button id="hideConnectors" onclick="hideConnectors()" >Hide connectors</button><br/>
             <button id="savePanel" onclick="saveStage()">Save panel</button><br/>
         </buttons>
     </section>
