@@ -31,7 +31,7 @@
     </nav>
 
     <section class="content">
-        <div id="trackCanvas" style="width:1024px; height:600px; display: inline-block; position: relative;">
+        <div id="trackCanvas">
         </div>
     </section>
 
@@ -41,6 +41,19 @@
             <button class="toggle-btn">-</button>
         </div>
         <div class="buttons-content" style="display: block;">
+            <div style="column-count: 2; text-align: center;">
+                <div>
+                    <label for="widthInput">Width:</label>
+                    <input type="number" id="panelWidth" style="width: 40%; vertical-align: middle; display: inline-block;" maxlength="4" >
+                </div>
+                <div>
+                    <label for="heightInput">Height:</label>
+                    <input type="number" id="panelHeight" style="width: 40%; vertical-align: middle; display: inline-block;" maxlength="4">
+                </div>
+            </div>
+            <div style="column-count: 1;">
+                <button onclick="resizePanel()" style="width: 100%;">Resize Panel</button>
+            </div>
             <div style="column-count: 2;">
                 <button id="addPoint" onclick="addPoint('normal')">Add Point</button>
                 <button id="addPointToStraight" onclick="addPoint('toStraight')">Add Point (to straight)</button>

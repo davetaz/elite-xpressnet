@@ -6,6 +6,8 @@ let panelData = {};
 let transformer = {};
 var blockSnapSize = 37.5;
 var controllers = [];
+var defaultWidth = 1024;
+var defaultHeight = 600;
 // Call createKonvaStage when the page is fully loaded
 document.addEventListener("DOMContentLoaded", function () {
     _initialiseButtonsContainer();
@@ -52,6 +54,20 @@ function createKonvaStage() {
     return stage;
 }
 
+function _resizeStage(width, height) {
+  // Set new width and height for the stage
+  stage.width(width);
+  stage.height(height);
+
+  // Redraw the stage
+  stage.draw();
+
+  const containerId = 'trackCanvas';
+  var container = document.getElementById(containerId);
+  container.style.width = width + 'px';
+  container.style.height = height + 'px';
+}
+
 function addTransformer(stage,layer) {
   transformer = new Konva.Transformer();
   layer.add(transformer);
@@ -91,6 +107,10 @@ function addTransformer(stage,layer) {
           case 'delete':
               _deleteSelectedShapes();
               break;
+          case 'properties':
+            var elementId = e.target.elementId; // Retrieve elementId from data attribute
+            configureElement(elementId, null); // Call properties function with elementId
+            break;
           default:
               break;
       }
@@ -98,15 +118,31 @@ function addTransformer(stage,layer) {
   });
 
   // Show the context menu
-  function showContextMenu(x, y) {
+  function showContextMenu(x, y, elementId, elementType) {
       contextMenu.style.display = 'block';
       contextMenu.style.top = y + 'px';
       contextMenu.style.left = x + 'px';
+      if (elementId) {
+        var ul = contextMenu.querySelector('ul');
+        if (elementType === "point" || elementType === "signal") {
+          var propertiesOption = document.createElement('li');
+          propertiesOption.id = 'properties';
+          propertiesOption.textContent = 'Properties';
+          propertiesOption.elementId = elementId; // Add elementId as a data attribute
+          ul.appendChild(propertiesOption);
+        } else if (elementType === "straight") {
+
+        }
+      }
   }
 
   // Hide the context menu
   function hideContextMenu() {
       contextMenu.style.display = 'none';
+      var propertiesOption = contextMenu.querySelector('#properties');
+      if (propertiesOption) {
+        propertiesOption.remove();
+      }
   }
 
   // Add event listener to stage to hide context menu on click outside
@@ -119,11 +155,20 @@ function addTransformer(stage,layer) {
     e.evt.preventDefault(); // Prevent default browser context menu
     var target = e.target;
     if (target !== stage) {
-        // Right-clicked on a shape
-        var containerRect = stage.container().getBoundingClientRect();
-        var menuX = containerRect.left + stage.getPointerPosition().x + 4;
-        var menuY = containerRect.top + stage.getPointerPosition().y + 4;
-        showContextMenu(menuX, menuY);
+      // Right-clicked on a shape
+      const selectedShapes = transformer.nodes();
+      var elementId = null;
+      var elementType = null;
+      if (selectedShapes.length == 1) {
+        if (selectedShapes[0].attrs.type === "point" || selectedShapes[0].attrs.type === "signal") {
+          elementId = selectedShapes[0].attrs.id;
+          elementType = selectedShapes[0].attrs.type;
+        }
+      }
+      var containerRect = stage.container().getBoundingClientRect();
+      var menuX = containerRect.left + stage.getPointerPosition().x + 4;
+      var menuY = containerRect.top + stage.getPointerPosition().y + 4;
+      showContextMenu(menuX, menuY, elementId, elementType);
     }
   });
 
@@ -200,6 +245,7 @@ function addTransformer(stage,layer) {
 
   // clicks should select/deselect shapes
   stage.on('click tap', function (e) {
+    transformer.resizeEnabled(false);
         // if we are selecting with rect, do nothing
     if (selectionRectangle.visible()) {
       return;
@@ -221,10 +267,10 @@ function addTransformer(stage,layer) {
       return;
     }
 
-        // Get the actual target based on the name
-        //var actualTarget = e.target.hasName('selector') ? e.target.parent : e.target;
+    // Get the actual target based on the name
+    //var actualTarget = e.target.hasName('selector') ? e.target.parent : e.target;
 
-        // do we pressed shift or ctrl?
+    // do we pressed shift or ctrl?
     const metaPressed = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
     const isSelected = transformer.nodes().indexOf(actualTarget) >= 0;
 
@@ -239,11 +285,12 @@ function addTransformer(stage,layer) {
         // remove node from array
         nodes.splice(nodes.indexOf(actualTarget), 1);
         transformer.nodes(nodes);
-      } else if (metaPressed && !isSelected) {
+    } else if (metaPressed && !isSelected) {
         // add the node into selection
         const nodes = transformer.nodes().concat([actualTarget]);
         transformer.nodes(nodes);
-      }
+    }
+
   });
 
   // Attach a double-click event listener to the shape
@@ -267,7 +314,7 @@ function addTransformer(stage,layer) {
     if (event.key === 'h' || event.key === 'H') {
       _horizontalFlipSelectedShapes();
     }
-    if (event.keyCode === 46 || event.keyCode === 8) {
+    if (event.key === 'Delete' || event.key === 'Backspace') {
       _deleteSelectedShapes();
     }
   });
@@ -279,6 +326,27 @@ function _initialiseButtonsContainer() {
   var toggleBtn = document.querySelector('.toggle-btn');
   var buttonsContent = document.querySelector('.buttons-content');
 
+  // Function to adjust position and keep the container within the viewport
+  function adjustPosition() {
+      var rect = buttonsContainer.getBoundingClientRect();
+      var offsetX = rect.width / 2; // Center horizontally
+      var offsetY = rect.height / 2; // Center vertically
+
+      // Calculate new position with a minimum margin of 5 pixels
+      var newX = Math.max(5, Math.min(window.innerWidth - rect.width - 5, buttonsContainer.offsetLeft));
+      var newY = Math.max(5, Math.min(window.innerHeight - rect.height - 5, buttonsContainer.offsetTop));
+
+      // Set new position
+      buttonsContainer.style.left = newX + 'px';
+      buttonsContainer.style.top = newY + 'px';
+  }
+
+  // Call the function to adjust position when the page loads
+  adjustPosition();
+
+  // Recalculate position on window resize
+  window.addEventListener('resize', adjustPosition);
+
   buttonsContainer.addEventListener('mousedown', function(event) {
       isDragging = true;
       offsetX = event.clientX - buttonsContainer.getBoundingClientRect().left;
@@ -289,11 +357,13 @@ function _initialiseButtonsContainer() {
       if (isDragging) {
           buttonsContainer.style.left = (event.clientX - offsetX) + 'px';
           buttonsContainer.style.top = (event.clientY - offsetY) + 'px';
+          adjustPosition(); // Call adjustPosition during dragging as well
       }
   });
 
   document.addEventListener('mouseup', function() {
       isDragging = false;
+      adjustPosition(); // Call adjustPosition when dragging ends
   });
 
   toggleBtn.addEventListener('click', function() {
@@ -304,6 +374,7 @@ function _initialiseButtonsContainer() {
           buttonsContent.style.display = 'none';
           toggleBtn.textContent = '+';
       }
+      adjustPosition(); // Call adjustPosition when toggle button is clicked
   });
 }
 
@@ -446,12 +517,12 @@ function _createElementBaseGroup(element) {
     group.rotation(element.rotation);
   }
   if (element.vflip) {
-    element.offsetY(element.height());
-    element.scaleY(-element.scaleY());
+    group.offsetY(group.height());
+    group.scaleY(-group.scaleY());
   }
   if (element.hflip) {
-    element.offsetX(element.width());
-    element.scaleX(-element.scaleX());
+    group.offsetX(group.width());
+    group.scaleX(-group.scaleX());
   }
   const selector = new Konva.Rect({
       width: element.width,
@@ -799,6 +870,7 @@ function _createCrossOver(element) {
 
 // Render plain line elements
 function createStraight(element) {
+  console.log(element);
     let group = _createElementBaseGroup(element);
     const shape = new Konva.Shape({
         stroke: 'gray',
@@ -1086,6 +1158,12 @@ function addControlElement() {
   layer.add(element);
 }
 
+function resizePanel() {
+  var width = parseInt(document.getElementById('panelWidth').value);
+  var height = parseInt(document.getElementById('panelHeight').value);
+
+  _resizeStage(width,height);
+}
 // Operation functions
 function showLogMessage(message) {
   const logElement = document.getElementById('log');
@@ -1374,10 +1452,12 @@ function configureElement(elementId,controllerID) {
               if (errors) {
                   $('#res').html('<p>Please correct the errors in your form</p>');
               } else {
-                  controller.remove();
                   var inputObject = values;
                   saveElementData(elementId,inputObject);
-                  showControllers();
+                  if (controller) {
+                    controller.remove();
+                    showControllers();
+                  }
                   document.getElementsByClassName('popup-overlay')[0].remove();
               }
           }

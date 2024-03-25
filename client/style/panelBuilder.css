@@ -1,6 +1,12 @@
 canvas {
     border: 1px solid gray;
 }
+#trackCanvas {
+    width:1024px;
+    height:600px;
+    display: inline-block;
+    position: relative;
+}
 .content {
     text-align: center;
 }
