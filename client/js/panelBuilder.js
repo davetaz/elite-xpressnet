@@ -15,39 +15,6 @@ document.addEventListener("DOMContentLoaded", function () {
     loadStage();
 });
 
-function _initialiseButtonsContainer() {
-  var isDragging = false;
-  var buttonsContainer = document.getElementById('buttonsContainer');
-  var toggleBtn = document.querySelector('.toggle-btn');
-  var buttonsContent = document.querySelector('.buttons-content');
-
-  buttonsContainer.addEventListener('mousedown', function(event) {
-      isDragging = true;
-      offsetX = event.clientX - buttonsContainer.getBoundingClientRect().left;
-      offsetY = event.clientY - buttonsContainer.getBoundingClientRect().top;
-  });
-
-  document.addEventListener('mousemove', function(event) {
-      if (isDragging) {
-          buttonsContainer.style.left = (event.clientX - offsetX) + 'px';
-          buttonsContainer.style.top = (event.clientY - offsetY) + 'px';
-      }
-  });
-
-  document.addEventListener('mouseup', function() {
-      isDragging = false;
-  });
-
-  toggleBtn.addEventListener('click', function() {
-      if (buttonsContent.style.display === 'none') {
-          buttonsContent.style.display = 'block';
-          toggleBtn.textContent = '-';
-      } else {
-          buttonsContent.style.display = 'none';
-          toggleBtn.textContent = '+';
-      }
-  });
-}
 //Initialisation functions
 function createKonvaStage() {
     const stage = new Konva.Stage({
@@ -88,11 +55,78 @@ function createKonvaStage() {
 function addTransformer(stage,layer) {
   transformer = new Konva.Transformer();
   layer.add(transformer);
-      //var shapes = stage.find('.shape');
-      // by default select all shapes
-      //transformer.nodes(shapes);
+  //var shapes = stage.find('.shape');
+  // by default select all shapes
+  //transformer.nodes(shapes);
   transformer.rotationSnaps([0, 90, 180, 270]);
   transformer.resizeEnabled(false);
+
+  // Define a context menu
+  var contextMenu = document.createElement('div');
+  contextMenu.id = 'context-menu';
+  contextMenu.style.display = 'none';
+  contextMenu.style.position = 'absolute';
+  contextMenu.innerHTML = `
+    <ul>
+      <li id="rotate">Rotate</li>
+      <li id="horizontal-flip">Horizontal Flip</li>
+      <li id="vertical-flip">Vertical Flip</li>
+      <li id="delete">Delete</li>
+    </ul>
+  `;
+  document.body.appendChild(contextMenu);
+  // Add event listeners for context menu buttons
+  contextMenu.addEventListener('click', function (e) {
+      var target = e.target;
+      switch (target.id) {
+          case 'rotate':
+              _rotateSelectedShapes();
+              break;
+          case 'horizontal-flip':
+              _horizontalFlipSelectedShapes();
+              break;
+          case 'vertical-flip':
+              _verticalFlipSelectedShapes();
+              break;
+          case 'delete':
+              _deleteSelectedShapes();
+              break;
+          default:
+              break;
+      }
+      hideContextMenu();
+  });
+
+  // Show the context menu
+  function showContextMenu(x, y) {
+      contextMenu.style.display = 'block';
+      contextMenu.style.top = y + 'px';
+      contextMenu.style.left = x + 'px';
+  }
+
+  // Hide the context menu
+  function hideContextMenu() {
+      contextMenu.style.display = 'none';
+  }
+
+  // Add event listener to stage to hide context menu on click outside
+  stage.on('click', function (e) {
+      hideContextMenu();
+  });
+
+  // Add event listeners to transformer to show context menu on right-click
+  stage.on('contextmenu', function (e) {
+    e.evt.preventDefault(); // Prevent default browser context menu
+    var target = e.target;
+    if (target !== stage) {
+        // Right-clicked on a shape
+        var containerRect = stage.container().getBoundingClientRect();
+        var menuX = containerRect.left + stage.getPointerPosition().x + 4;
+        var menuY = containerRect.top + stage.getPointerPosition().y + 4;
+        showContextMenu(menuX, menuY);
+    }
+  });
+
 
   // add a new feature, lets add ability to draw selection rectangle
   var selectionRectangle = new Konva.Rect({
@@ -236,6 +270,40 @@ function addTransformer(stage,layer) {
     if (event.keyCode === 46 || event.keyCode === 8) {
       _deleteSelectedShapes();
     }
+  });
+}
+
+function _initialiseButtonsContainer() {
+  var isDragging = false;
+  var buttonsContainer = document.getElementById('buttonsContainer');
+  var toggleBtn = document.querySelector('.toggle-btn');
+  var buttonsContent = document.querySelector('.buttons-content');
+
+  buttonsContainer.addEventListener('mousedown', function(event) {
+      isDragging = true;
+      offsetX = event.clientX - buttonsContainer.getBoundingClientRect().left;
+      offsetY = event.clientY - buttonsContainer.getBoundingClientRect().top;
+  });
+
+  document.addEventListener('mousemove', function(event) {
+      if (isDragging) {
+          buttonsContainer.style.left = (event.clientX - offsetX) + 'px';
+          buttonsContainer.style.top = (event.clientY - offsetY) + 'px';
+      }
+  });
+
+  document.addEventListener('mouseup', function() {
+      isDragging = false;
+  });
+
+  toggleBtn.addEventListener('click', function() {
+      if (buttonsContent.style.display === 'none') {
+          buttonsContent.style.display = 'block';
+          toggleBtn.textContent = '-';
+      } else {
+          buttonsContent.style.display = 'none';
+          toggleBtn.textContent = '+';
+      }
   });
 }
 
