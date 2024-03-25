@@ -111,6 +111,14 @@ function addTransformer(stage,layer) {
             var elementId = e.target.elementId; // Retrieve elementId from data attribute
             configureElement(elementId, null); // Call properties function with elementId
             break;
+          case 'growShape':
+            var elementId = e.target.elementId; // Retrieve elementId from data attribute
+            _growShape(elementId); // Call properties function with elementId
+            break;
+          case 'shrinkShape':
+            var elementId = e.target.elementId; // Retrieve elementId from data attribute
+            _shrinkShape(elementId); // Call properties function with elementId
+            break;
           default:
               break;
       }
@@ -119,6 +127,7 @@ function addTransformer(stage,layer) {
 
   // Show the context menu
   function showContextMenu(x, y, elementId, elementType) {
+    console.log(elementType);
       contextMenu.style.display = 'block';
       contextMenu.style.top = y + 'px';
       contextMenu.style.left = x + 'px';
@@ -131,7 +140,16 @@ function addTransformer(stage,layer) {
           propertiesOption.elementId = elementId; // Add elementId as a data attribute
           ul.appendChild(propertiesOption);
         } else if (elementType === "straight") {
-
+          var growShapeOption = document.createElement('li');
+          growShapeOption.id = 'growShape';
+          growShapeOption.textContent = 'Increase length';
+          growShapeOption.elementId = elementId; // Add elementId as a data attribute
+          ul.appendChild(growShapeOption);
+          var shrinkShapeOption = document.createElement('li');
+          shrinkShapeOption.id = 'shrinkShape';
+          shrinkShapeOption.textContent = 'Descrease length';
+          shrinkShapeOption.elementId = elementId; // Add elementId as a data attribute
+          ul.appendChild(shrinkShapeOption);
         }
       }
   }
@@ -142,6 +160,14 @@ function addTransformer(stage,layer) {
       var propertiesOption = contextMenu.querySelector('#properties');
       if (propertiesOption) {
         propertiesOption.remove();
+      }
+      var growShapeOption = contextMenu.querySelector('#growShape');
+      if (growShapeOption) {
+        growShapeOption.remove();
+      }
+      var shrinkShapeOption = contextMenu.querySelector('#shrinkShape');
+      if (shrinkShapeOption) {
+        shrinkShapeOption.remove();
       }
   }
 
@@ -160,10 +186,8 @@ function addTransformer(stage,layer) {
       var elementId = null;
       var elementType = null;
       if (selectedShapes.length == 1) {
-        if (selectedShapes[0].attrs.type === "point" || selectedShapes[0].attrs.type === "signal") {
-          elementId = selectedShapes[0].attrs.id;
-          elementType = selectedShapes[0].attrs.type;
-        }
+        elementId = selectedShapes[0].attrs.id;
+        elementType = selectedShapes[0].attrs.type;
       }
       var containerRect = stage.container().getBoundingClientRect();
       var menuX = containerRect.left + stage.getPointerPosition().x + 4;
@@ -317,6 +341,12 @@ function addTransformer(stage,layer) {
     if (event.key === 'Delete' || event.key === 'Backspace') {
       _deleteSelectedShapes();
     }
+    if (event.key === '+') {
+      _growShape();
+    }
+    if (event.key === '-') {
+      _shrinkShape();
+    }
   });
 }
 
@@ -467,6 +497,36 @@ function _rotateSelectedShapes() {
             //shape.offsetX(offsetX);
             //shape.offsetY(offsetY);
   });
+}
+
+function _growShape() {
+  const selectedShapes = transformer.nodes();
+  if (selectedShapes.length === 1) {
+    const shape = selectedShapes[0];
+    if (shape.attrs.type === "straight") {
+      const config = {...shape.attrs};
+      config.width = config.width + blockSnapSize;
+      shape.destroy();
+      const newShape = createStraight(config);
+      layer.add(newShape);
+      transformer.nodes([newShape]);
+    }
+  }
+}
+
+function _shrinkShape() {
+  const selectedShapes = transformer.nodes();
+  if (selectedShapes.length === 1) {
+    const shape = selectedShapes[0];
+    if (shape.attrs.type === "straight") {
+      const config = {...shape.attrs};
+      config.width = config.width - blockSnapSize;
+      shape.destroy();
+      const newShape = createStraight(config);
+      layer.add(newShape);
+      transformer.nodes([newShape]);
+    }
+  }
 }
 
 // Internal konva control functions for rendering
@@ -1076,7 +1136,7 @@ function addStraight(length) {
     if (length == "long") {
         width = width * 4;
     }
-    const striat = {
+    const straight = {
         x:blockSnapSize,
         y:blockSnapSize,
         width: width,
@@ -1085,7 +1145,7 @@ function addStraight(length) {
         name: "shape",
         draggable: true,
     };
-    element = createStraight(striat);
+    element = createStraight(straight);
     layer.add(element);
 }
 
