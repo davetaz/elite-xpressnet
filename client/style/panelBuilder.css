@@ -10,6 +10,9 @@ canvas {
 .content {
     text-align: center;
 }
+#configureElementForm {
+    text-align: left;
+}
 .buttons-container {
     position: absolute;
     top: 4px; /* Adjust as needed */
