@@ -2,18 +2,17 @@ let backgroundColor = "white";
 let panelId = "";
 let stage = {};
 let layer = {};
+var gridLayer = new Konva.Layer();
 let panelData = {};
 let transformer = {};
+let stageWidth = 1024;
+let stageHeight = 600;
 var blockSnapSize = 37.5;
 var controllers = [];
 var defaultWidth = 1024;
 var defaultHeight = 600;
 // Call createKonvaStage when the page is fully loaded
 document.addEventListener("DOMContentLoaded", function () {
-    _initialiseButtonsContainer();
-    stage = createKonvaStage();
-    const layer = stage.getLayers()[0];
-    addTransformer(stage,layer);
     loadStage();
 });
 
@@ -21,19 +20,23 @@ document.addEventListener("DOMContentLoaded", function () {
 function createKonvaStage() {
     const stage = new Konva.Stage({
         container: 'trackCanvas',
-        width: 1024,
-        height: 600,
+        width: stageWidth,
+        height: stageHeight,
     });
 
     layer = new Konva.Layer();
     stage.add(layer);
-    var width = 1024;
-    var height = 600;
-    var gridLayer = new Konva.Layer();
-    var padding = blockSnapSize;
-    for (var i = 0; i < width / padding; i++) {
+    _drawGrid(stage);
+
+    return stage;
+}
+
+function _drawGrid(stage) {
+  gridLayer.destroyChildren();
+  var padding = blockSnapSize;
+    for (var i = 0; i < stageWidth / padding; i++) {
       gridLayer.add(new Konva.Line({
-        points: [Math.round(i * padding) + 0.5, 0, Math.round(i * padding) + 0.5, height],
+        points: [Math.round(i * padding) + 0.5, 0, Math.round(i * padding) + 0.5, stageHeight],
         stroke: '#ddd',
         strokeWidth: 0.2,
         dash: [5, 5]
@@ -41,26 +44,25 @@ function createKonvaStage() {
     }
 
     gridLayer.add(new Konva.Line({points: [0,0,10,10]}));
-    for (var j = 0; j < height / padding; j++) {
+    for (var j = 0; j < stageHeight / padding; j++) {
       gridLayer.add(new Konva.Line({
-        points: [0, Math.round(j * padding), width, Math.round(j * padding)],
+        points: [0, Math.round(j * padding), stageWidth, Math.round(j * padding)],
         stroke: '#ddd',
         strokeWidth: 0.2,
         dash: [5, 5]
       }));
     }
     stage.add(gridLayer);
-
-    return stage;
 }
 
 function _resizeStage(width, height) {
   // Set new width and height for the stage
+  stageWidth = width;
+  stageHeight = height;
   stage.width(width);
   stage.height(height);
 
-  // Redraw the stage
-  stage.draw();
+  _drawGrid(stage);
 
   const containerId = 'trackCanvas';
   var container = document.getElementById(containerId);
@@ -355,6 +357,8 @@ function _initialiseButtonsContainer() {
   var buttonsContainer = document.getElementById('buttonsContainer');
   var toggleBtn = document.querySelector('.toggle-btn');
   var buttonsContent = document.querySelector('.buttons-content');
+  buttonsContent.querySelector('#panelWidth').value = stageWidth;
+  buttonsContent.querySelector('#panelHeight').value = stageHeight;
 
   // Function to adjust position and keep the container within the viewport
   function adjustPosition() {
@@ -1234,6 +1238,9 @@ function showLogMessage(message) {
 }
 
 function saveStage() {
+  panelData.stage = {};
+  panelData.stage.width = stageWidth;
+  panelData.stage.height = stageHeight;
   panelData.elements = [];
   layer.children.forEach(function(shapeData) {
     if (shapeData.attrs.save) {
@@ -1284,6 +1291,14 @@ function loadStage() {
       $.get(`//${server}/panel/${panelId}`, function (data) {
           // Handle the response data here
           panelData = data;
+          if (panelData.stage) {
+            stageWidth = panelData.stage.width || defaultWidth;
+            stageHeight = panelData.stage.height || defaultHeight;
+          }
+          stage = createKonvaStage();
+          const layer = stage.getLayers()[0];
+          addTransformer(stage,layer);
+          _initialiseButtonsContainer();
           if (panelData.elements) {
             const elements = panelData.elements;
             elements.forEach(function(shapeData) {
@@ -1310,7 +1325,14 @@ function loadStage() {
           }
       });
   } else {
-      console.error('No saved data found');
+    console.error('No saved data found');
+    stageWidth = defaultWidth;
+    stageHeight = defaultHeight;
+    stage = createKonvaStage();
+    const layer = stage.getLayers()[0];
+    addTransformer(stage,layer);
+    _initialiseButtonsContainer();
+
   }
 }
 
