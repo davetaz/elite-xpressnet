@@ -2,6 +2,7 @@ let backgroundColor = "white";
 let panelId = "";
 let stage = {};
 let layer = {};
+let dccNumberMap = {};
 var gridLayer = new Konva.Layer();
 let panelData = {};
 let transformer = {};
@@ -934,7 +935,6 @@ function _createCrossOver(element) {
 
 // Render plain line elements
 function createStraight(element) {
-  console.log(element);
     let group = _createElementBaseGroup(element);
     const shape = new Konva.Shape({
         stroke: 'gray',
@@ -1247,6 +1247,7 @@ function saveStage() {
       panelData.elements.push(shapeData.attrs);
     }
   });
+  _mapElementsToDCCNumbers(panelData.elements);
   // Check if panelId is not null or undefined
   if (panelId) {
     // Get the server from localStorage
@@ -1296,11 +1297,12 @@ function loadStage() {
             stageHeight = panelData.stage.height || defaultHeight;
           }
           stage = createKonvaStage();
-          const layer = stage.getLayers()[0];
+          layer = stage.getLayers()[0];
           addTransformer(stage,layer);
           _initialiseButtonsContainer();
           if (panelData.elements) {
             const elements = panelData.elements;
+            _mapElementsToDCCNumbers(elements);
             elements.forEach(function(shapeData) {
               // Create a new shape with the shape data
               if (shapeData.type == "point") {
@@ -1329,7 +1331,7 @@ function loadStage() {
     stageWidth = defaultWidth;
     stageHeight = defaultHeight;
     stage = createKonvaStage();
-    const layer = stage.getLayers()[0];
+    layer = stage.getLayers()[0];
     addTransformer(stage,layer);
     _initialiseButtonsContainer();
 
@@ -1579,6 +1581,36 @@ function setSignalColor(signalGroup, color) {
 }
 
 // DCC operation functions
+function _mapElementsToDCCNumbers(elements) {
+  dccNumberMap = {};
+
+  elements.forEach(element => {
+    if (element.type === 'point' && element.config && element.config.DCCNumber) {
+      const dccNumber = element.config.DCCNumber;
+      if (!dccNumberMap[dccNumber]) {
+        dccNumberMap[dccNumber] = [];
+      }
+      // Check if element.id already exists in the array before pushing
+      if (!dccNumberMap[dccNumber].includes(element.id)) {
+        dccNumberMap[dccNumber].push(element.id);
+      }
+    } else if (element.type === 'signal' && element.config && element.config.Aspects) {
+      element.config.Aspects.forEach(aspect => {
+        const dccNumber = aspect.DCCNumber;
+        if (dccNumber) {
+          if (!dccNumberMap[dccNumber]) {
+            dccNumberMap[dccNumber] = [];
+          }
+          // Check if element.id already exists in the array before pushing
+          if (!dccNumberMap[dccNumber].includes(element.id)) {
+            dccNumberMap[dccNumber].push(element.id);
+          }
+        }
+      });
+    }
+  });
+}
+
 function switchPoint(id) {
   const element = _findElementById(layer, id);
   if (element) {
@@ -1602,7 +1634,7 @@ function switchPoint(id) {
   }
 }
 
-function setPointState(id, state) {
+function setPointState(id, state, setDirection = true) {
   const element = _findElementById(layer, id);
   if (element) {
       if (state === "normal" || state === "switched") {
@@ -1619,7 +1651,9 @@ function setPointState(id, state) {
               direction = "FORWARD";
             }
           }
-          setAccessoryDirection(element.attrs.config.DCCNumber,direction);
+          if (setDirection) {
+            setAccessoryDirection(element.attrs.config.DCCNumber,direction);
+          }
           saveStage();
       } else {
           console.error('Invalid state provided');
@@ -1629,7 +1663,7 @@ function setPointState(id, state) {
   }
 }
 
-function changeSignal(id, color) {
+function changeSignal(id, color, setDirection = true) {
   const element = _findElementById(layer, id);
   if (element) {
     const config = element.attrs.config || { Aspects: [] };
@@ -1652,7 +1686,9 @@ function changeSignal(id, color) {
       direction = matchingAspect['Aspect direction'].toUpperCase();
 
       // Set accessory direction using retrieved values
-      setAccessoryDirection(dccNumber, direction);
+      if(setDirection) {
+        setAccessoryDirection(dccNumber, direction);
+      }
     } else {
       console.error(`Aspect with color ${color} not found in the configuration.`);
     }
@@ -1664,9 +1700,48 @@ function changeSignal(id, color) {
   }
 }
 
+function _updateAccessoriesByDCCNumber(dccNumber,direction) {
+  direction = direction.charAt(0).toUpperCase() + direction.slice(1).toLowerCase();
+  // Get all elements ids for the dccNumber from dccNumberMap
+  const elementIds = dccNumberMap[dccNumber];
+  if (!elementIds || elementIds.length === 0) {
+    console.error(`No elements found for DCC number ${dccNumber}`);
+    return;
+  }
+
+  // Iterate through each element id
+  elementIds.forEach(id => {
+    let element = _findElementById(layer,id);
+    console.log(element);
+    if (!element) {
+      console.error(`Element with ID ${id} not found`);
+      return;
+    }
+    element = element.attrs;
+
+    if (element.type === 'point') {
+      // If element is a point
+      if (element.config.SwitchedDirection === direction) {
+        setPointState(id, "switched", false);
+      } else {
+        setPointState(id, "normal", false);
+      }
+    } else if (element.type === 'signal') {
+      // If element is a signal
+      const matchingAspect = element.config.Aspects.find(aspect => aspect.DCCNumber === dccNumber && aspect['Aspect direction'] === direction);
+      if (!matchingAspect) {
+        console.error(`No matching aspect found for DCC number ${dccNumber} and direction ${direction}`);
+        return;
+      }
+      changeSignal(id, matchingAspect.Colour, false);
+    }
+  });
+}
+
 function setAccessoryDirection(dccNumber, direction) {
-  if (serverStatus != "online"){
-      log('Cannot send command, server ' + serverStatus );
+  _updateAccessoriesByDCCNumber(dccNumber,direction)
+  if (serverStatus == "Offline" || serverStatus == "Controller offline"){
+      console.log('Cannot send command, server ' + serverStatus );
       return;
   }
   return fetch(`//${server}/accessory/${dccNumber}`, {

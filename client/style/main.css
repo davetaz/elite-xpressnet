@@ -17,6 +17,9 @@ nav {
 .content {
     flex-grow: 1;
   }
+section .padded {
+    margin: 1em;
+}
 .footer {
     width:100%;
     background: var(--background);

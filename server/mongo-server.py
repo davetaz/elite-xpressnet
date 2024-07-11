@@ -31,6 +31,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Dictionary to store the state of trains
 train_state = {}
 
+# Dictionary to store the state of trains
+accessory_state = {}
+
 class RealHornbyController:
     def __init__(self, device_path, baud_rate):
         try:
@@ -450,14 +453,36 @@ def control_train_function(train_number, function_id):
     return jsonify({'message': f'Train {train_number} function {function_id} set to {switch}'}), 200
 
 # API endpoint to control the state of an accessory
-@app.route('/accessory/<int:accessory_number>', methods=['PUT'])
+@app.route('/accessory/<int:accessory_number>', methods=['PUT', 'GET'])
 def control_accessory_state(accessory_number):
-    direction = request.json.get('direction', 0)
-    if direction in ["FORWARD", "REVERSE"]:
-        controller.accessory(accessory_number,direction)
-        return jsonify({'message': f'Accessory {accessory_number}: Set direction {direction}'}), 200
-    else:
-        return jsonify({'message': 'Invalid state specified. Please use "activate" or "deactivate"'}), 400
+    if request.method == 'PUT':
+        direction = request.json.get('direction', 0)
+
+        # Check if the direction is valid
+        if direction in ["FORWARD", "REVERSE"]:
+            # Save the state of the accessory
+            accessory_state[accessory_number] = {'direction': direction}
+
+            # Perform action on the accessory
+            controller.accessory(accessory_number, direction)
+            return jsonify({'message': f'Accessory {accessory_number}: Set direction {direction}'}), 200
+        else:
+            # Return an error message for invalid direction
+            return jsonify({'message': 'Invalid state specified. Please use "FORWARD" or "REVERSE"'}), 400
+
+    elif request.method == 'GET':
+        # Check if the accessory state exists
+        if accessory_number in accessory_state:
+            # Retrieve and return the accessory state
+            return jsonify(accessory_state[accessory_number]), 200
+        else:
+            # Return a 404 Not Found error if the accessory state is not found
+            return jsonify({'message': f'Accessory {accessory_number} state not found'}), 404
+
+# API endpoint to get the state of all accessories
+@app.route('/accessories', methods=['GET'])
+def get_all_accessory_states():
+    return jsonify(accessory_state), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)

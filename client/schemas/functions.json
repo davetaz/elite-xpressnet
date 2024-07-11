@@ -1,0 +1,26 @@
+{
+    "_id": {
+        "type": "hidden"
+    },
+    "Name": {
+        "type": "string",
+        "maxLength": 20,
+        "title": "Name (required)",
+        "required": true
+    },
+    "Icon": {
+        "type": "file",
+        "title": "Icon",
+        "media": {
+            "binaryEncoding": "base64",
+            "contentMediaType": "image/png, image/jpeg"
+        },
+        "required": true
+    },
+    "Type": {
+        "type": "string",
+        "enum": ["Latching", "Momentary"],
+        "title": "Type (required)",
+        "required": true
+    }
+}

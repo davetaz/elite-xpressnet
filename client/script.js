@@ -11,8 +11,10 @@ document.addEventListener("DOMContentLoaded", function () {
     html.setAttribute('data-bs-theme', prefers);
 
     loadSection('trainPanel');
+    loadSection('accessoriesPanel');
     loadSection('serverSettings');
     loadSection('addTrain');
+    loadSection('addFunction');
     loadSection('viewTrains');
     loadSection('addPanel');
     loadSection('viewPanels');

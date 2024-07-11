@@ -16,8 +16,10 @@
         <script type="text/javascript" src="libraries/jsonform.js"></script>
 
         <script type="text/javascript" src="js/trainPanel.js"></script>
+        <script type="text/javascript" src="js/accessoriesPanel.js"></script>
         <script type="text/javascript" src="js/serverSettings.js"></script>
         <script type="text/javascript" src="js/addTrain.js"></script>
+        <script type="text/javascript" src="js/addFunction.js"></script>
         <script type="text/javascript" src="js/addPanel.js"></script>
         <script type="text/javascript" src="js/viewTrains.js"></script>
         <script type="text/javascript" src="js/viewPanels.js"></script>
@@ -27,6 +29,7 @@
         <link rel="stylesheet" type="text/css" href="style/ext/jquery.dataTables.min.css">
 
         <link rel="stylesheet" type="text/css" href="style/main.css">
+        <link rel="stylesheet" type="text/css" href="style/accessoriesPanel.css">
         <link rel="stylesheet" type="text/css" href="style/buttons.css">
         <link rel="stylesheet" type="text/css" href="style/range_input.css">
         <link rel="stylesheet" type="text/css" href="style/popup.css">
@@ -49,23 +52,28 @@
             <ul>
                 <li target="addTrain">Add Train</li>
                 <li target="viewTrains">View Trains</li>
+                <li target="addFunction">Add Function</li>
                 <li target="addPanel">Add Panel</li>
                 <li target="viewPanels">View Panels</li>
-                <li target="addAccessory">Add Accessory</li>
+                <li target="accessoriesPanel">View Accessories</li>
                 <li target="serverSettings">Server settings</li>
             </ul>
         </nav>
-        <section id="serverSettings">
+        <section id="serverSettings" class="padded">
         </section>
         <section id="trainPanel">
         </section>
-        <section id="addTrain">
+        <section id="addFunction" class="padded">
         </section>
-        <section id="viewTrains">
+        <section id="accessoriesPanel" class="padded">
         </section>
-        <section id="addPanel">
+        <section id="addTrain" class="padded">
         </section>
-        <section id="viewPanels">
+        <section id="viewTrains" class="padded">
+        </section>
+        <section id="addPanel" class="padded">
+        </section>
+        <section id="viewPanels" class="padded">
         </section>
     </section>
 
