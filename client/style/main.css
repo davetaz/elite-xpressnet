@@ -36,6 +36,8 @@ section .padded {
     margin-right: 16px;
     margin-left: 16px;
     float: right;
+    text-decoration: underline;
+    cursor: pointer;
 }
 button {
     padding: 10px 20px;

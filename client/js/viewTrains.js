@@ -1,5 +1,5 @@
 function setupviewTrains() {
-
+    let firstLoad = true;
     if ($.fn.DataTable.isDataTable('#trainTable')) {
         // Destroy the existing DataTable if it exists
         $('#trainTable').DataTable().destroy();
@@ -28,11 +28,23 @@ function setupviewTrains() {
             dom: 'Bfrtip', // Add export buttons
             buttons: [
                 'copy', 'csv', {
-                    'text': '<i class="fa fa-id-badge fa-fw" aria-hidden="true"></i>',
+                    'text': '<i class="fa viewSwitch fa-table fa-fw" aria-hidden="true"></i>',
                     'action': function (e, dt, node) {
-                        $(dt.table().node()).toggleClass('cards');
-                        $('.fa', node).toggleClass(['fa-table', 'fa-id-badge']);
-                        dt.draw('page');
+                        firstLoad = false;
+
+                        const tableNode = $(dt.table().node());
+                        const isCardsView = tableNode.hasClass('cards');
+
+                        if (isCardsView) {
+                            tableNode.removeClass('cards');
+                            $('.viewSwitch', node).removeClass('fa-table').addClass('fa-id-badge');
+                            // Switch to table view
+                            dt.draw('page');
+                        } else {
+                            tableNode.addClass('cards');
+                            $('.viewSwitch', node).removeClass('fa-id-badge').addClass('fa-table');
+                            dt.draw('page');
+                        }
                     },
                     'className': 'btn-sm',
                     'attr': {
@@ -48,6 +60,13 @@ function setupviewTrains() {
                         $(this).attr('data-column', columnName);
                     }
                 });
+            },
+            drawCallback: function(settings) {
+                // Add 'cards' class by default on table initialization
+                console.log('called');
+                if (!$(this.api().table().node()).hasClass('cards') && firstLoad) {
+                    $(this.api().table().node()).addClass('cards');
+                }
             }
         });
 

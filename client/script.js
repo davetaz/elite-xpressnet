@@ -10,8 +10,26 @@ document.addEventListener("DOMContentLoaded", function () {
     html.classList.add(prefers);
     html.setAttribute('data-bs-theme', prefers);
 
+    var topNav = document.getElementById("topNav");
+    topNav.addEventListener("click", function(event) {
+        var clickedElement = event.target;
+        if (clickedElement.tagName === "BUTTON") {
+            var screenId = clickedElement.getAttribute('target');
+            window["setup" + screenId]();
+            showScreen(screenId);
+        }
+    });
+
+    document.getElementById('serverStatus').onclick = function() {
+        const screenId = "serverSettings";
+        if (typeof window["setup" + screenId] === 'function') {
+            window["setup" + screenId]();
+        }
+        showScreen(screenId);
+    };
+
     loadSection('trainPanel');
-    loadSection('accessoriesPanel');
+    loadSection('viewAccessories');
     loadSection('serverSettings');
     loadSection('addTrain');
     loadSection('addFunction');
@@ -104,49 +122,12 @@ function hideAllContentElements() {
     }
 }
 
-// Click event listener for the menu icon
-var menuIcon = document.getElementById("menuIcon");
-menuIcon.addEventListener("click", function() {
-    var mainMenu = document.getElementById("main-menu");
-    if (mainMenu.style.display === "none") {
-        // If the menu is currently hidden, show it and hide other content
-        hideAllContentElements();
-        mainMenu.style.display = "block";
-        document.getElementById(currentScreen).style.display = "none";
-    } else {
-        // If the menu is currently shown, hide it and show the specified element
-        mainMenu.style.display = "none";
-        document.getElementById(currentScreen).style.display = "block";
-    }
-});
-
 function showScreen(id) {
     hideAllContentElements();
     var element = document.getElementById(id);
     element.style.display = "block";
     currentScreen = id;
 }
-
-// Get a reference to the parent container (the <ul> element)
-var menuContainer = document.getElementById("main-menu");
-// Click event listener for the parent container (event delegation)
-menuContainer.addEventListener("click", function(event) {
-    var clickedElement = event.target;
-    if (clickedElement.tagName === "LI") {
-        var screenId = clickedElement.getAttribute('target');
-        window["setup" + screenId]();
-        showScreen(screenId);
-    }
-});
-
-var topNav = document.getElementById("topNav");
-topNav.addEventListener("click", function(event) {
-    var clickedElement = event.target;
-    if (clickedElement.tagName === "BUTTON") {
-        var screenId = clickedElement.getAttribute('target');
-        showScreen(screenId);
-    }
-});
 
 function log(string) {
     const logElement = document.getElementById("log");

@@ -16,7 +16,7 @@
         <script type="text/javascript" src="libraries/jsonform.js"></script>
 
         <script type="text/javascript" src="js/trainPanel.js"></script>
-        <script type="text/javascript" src="js/accessoriesPanel.js"></script>
+        <script type="text/javascript" src="js/viewAccessories.js"></script>
         <script type="text/javascript" src="js/serverSettings.js"></script>
         <script type="text/javascript" src="js/addTrain.js"></script>
         <script type="text/javascript" src="js/addFunction.js"></script>
@@ -45,27 +45,11 @@
 <body>
     <nav id="topNav" class="topNav">
         <button id="trainControl" class="navButton" target="trainPanel">Control</button>
-        <button id="accessoriesControl" class="navButton" target="accessoriesPanel">Accessories</button>
+        <button id="accessoriesControl" class="navButton" target="viewAccessories">Accessories</button>
         <button id="accessoriesControl" class="navButton" target="viewPanels">Panels</button>
         <button id="engineShed" class="navButton" target="viewTrains">Engine Shed</button>
     </nav>
-    <div id="menuIcon" class="menu-icon">
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-    </div>
     <section class="content">
-        <nav id="main-menu">
-            <ul>
-                <li target="addTrain">Add Train</li>
-                <li target="viewTrains">View Trains</li>
-                <li target="viewFunctions">View Functions</li>
-                <li target="addPanel">Add Panel</li>
-                <li target="viewPanels">View Panels</li>
-                <li target="accessoriesPanel">View Accessories</li>
-                <li target="serverSettings">Server settings</li>
-            </ul>
-        </nav>
         <section id="serverSettings" class="padded">
         </section>
         <section id="trainPanel">
@@ -74,7 +58,7 @@
         </section>
         <section id="viewFunctions" class="padded">
         </section>
-        <section id="accessoriesPanel" class="padded">
+        <section id="viewAccessories" class="padded">
         </section>
         <section id="addTrain" class="padded">
         </section>
@@ -140,7 +124,7 @@
     <script src="script.js"></script>
     <footer id="footer" class="footer">
         <div id="log" class="log"></div>
-        <div class="serverStatus">
+        <div id="serverStatus" class="serverStatus">
             Status: <span id="serverStatus"></span>
         </div>
     </footer>
