@@ -9,7 +9,7 @@
         <title>Add trains</title>
 
         <script type="text/javascript" src="libraries/jquery-1.11.1.min.js"></script>
-        <script type="text/javascript" src="libraries/jquery.dataTables.min.js"></script>
+        <!--<script type="text/javascript" src="libraries/jquery.dataTables.min.js"></script>-->
         <script type="text/javascript" src="libraries/underscore.js"></script>
         <script type="text/javascript" src="libraries/jquery-ui.js"></script>
         <script type="text/javascript" src="libraries/jsv.js"></script>
@@ -23,10 +23,11 @@
         <script type="text/javascript" src="js/addPanel.js"></script>
         <script type="text/javascript" src="js/viewTrains.js"></script>
         <script type="text/javascript" src="js/viewPanels.js"></script>
+        <script type="text/javascript" src="js/viewFunctions.js"></script>
 
         <link rel="stylesheet" type="text/css" href="style/ext/water.css">
-        <link rel="stylesheet" type="text/css" href="style/ext/jquery.dataTables.css">
-        <link rel="stylesheet" type="text/css" href="style/ext/jquery.dataTables.min.css">
+        <!--<link rel="stylesheet" type="text/css" href="style/ext/jquery.dataTables.css">
+        <link rel="stylesheet" type="text/css" href="style/ext/jquery.dataTables.min.css">-->
 
         <link rel="stylesheet" type="text/css" href="style/main.css">
         <link rel="stylesheet" type="text/css" href="style/accessoriesPanel.css">
@@ -34,13 +35,19 @@
         <link rel="stylesheet" type="text/css" href="style/range_input.css">
         <link rel="stylesheet" type="text/css" href="style/popup.css">
 
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link href="https://cdn.datatables.net/v/dt/dt-2.0.8/b-3.0.2/sc-2.4.3/datatables.min.css" rel="stylesheet">
+        <script src="https://cdn.datatables.net/v/dt/dt-2.0.8/b-3.0.2/sc-2.4.3/datatables.min.js"></script>
+
         <link rel="manifest" href="manifest.json">
         <meta name="apple-mobile-web-app-capable" content="yes">
     </head>
 <body>
     <nav id="topNav" class="topNav">
-        <button id="trainControl" class="navButton" target="trainPanel">Trains</button>
+        <button id="trainControl" class="navButton" target="trainPanel">Control</button>
         <button id="accessoriesControl" class="navButton" target="accessoriesPanel">Accessories</button>
+        <button id="accessoriesControl" class="navButton" target="viewPanels">Panels</button>
+        <button id="engineShed" class="navButton" target="viewTrains">Engine Shed</button>
     </nav>
     <div id="menuIcon" class="menu-icon">
         <div class="bar"></div>
@@ -52,7 +59,7 @@
             <ul>
                 <li target="addTrain">Add Train</li>
                 <li target="viewTrains">View Trains</li>
-                <li target="addFunction">Add Function</li>
+                <li target="viewFunctions">View Functions</li>
                 <li target="addPanel">Add Panel</li>
                 <li target="viewPanels">View Panels</li>
                 <li target="accessoriesPanel">View Accessories</li>
@@ -64,6 +71,8 @@
         <section id="trainPanel">
         </section>
         <section id="addFunction" class="padded">
+        </section>
+        <section id="viewFunctions" class="padded">
         </section>
         <section id="accessoriesPanel" class="padded">
         </section>

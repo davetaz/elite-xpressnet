@@ -27,8 +27,28 @@ function setupviewTrains() {
             columns: columns,
             dom: 'Bfrtip', // Add export buttons
             buttons: [
-                'copy', 'csv'
-            ]
+                'copy', 'csv', {
+                    'text': '<i class="fa fa-id-badge fa-fw" aria-hidden="true"></i>',
+                    'action': function (e, dt, node) {
+                        $(dt.table().node()).toggleClass('cards');
+                        $('.fa', node).toggleClass(['fa-table', 'fa-id-badge']);
+                        dt.draw('page');
+                    },
+                    'className': 'btn-sm',
+                    'attr': {
+                        'title': 'Change views',
+                    }
+                }
+            ],
+            createdRow: function (row, data, dataIndex) {
+                // Add data-column attributes to each cell
+                $('td', row).each(function (colIndex) {
+                    var columnName = columns[colIndex].data;
+                    if (data[columnName] != "") {
+                        $(this).attr('data-column', columnName);
+                    }
+                });
+            }
         });
 
         // Make an HTTP GET request to fetch data from //${server}/trains/
@@ -54,8 +74,6 @@ function setupviewTrains() {
                     // Add an "Edit" link column
                     rowData['Edit'] = `<a href="javascript:void(0);" onclick="editTrain('${data[i]._id}');">Edit</a>`;
                     rowData['Delete'] = `<a href="javascript:void(0);" onclick="confirmDelete('${data[i]._id}','${data[i].ShortName}');">Delete</a>`;
-                    // Add edit here
-                    // Add delete here
                     table.row.add(rowData).draw(false);
                 }
             }

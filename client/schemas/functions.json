@@ -14,8 +14,7 @@
         "media": {
             "binaryEncoding": "base64",
             "contentMediaType": "image/png, image/jpeg"
-        },
-        "required": true
+        }
     },
     "Type": {
         "type": "string",

@@ -5,6 +5,7 @@ import json
 from bson import json_util, ObjectId
 from flask_cors import CORS
 import configparser  # Import the configparser module
+import shutil
 
 import time
 import threading
@@ -127,6 +128,21 @@ def wait(secs):
 
 def parse_json(data):
     return json.loads(json_util.dumps(data))
+
+def delete_directory_contents(directory_path):
+    if os.path.exists(directory_path):
+        try:
+            # Remove all files in the directory
+            for filename in os.listdir(directory_path):
+                file_path = os.path.join(directory_path, filename)
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            # Now remove the empty directory
+            os.rmdir(directory_path)
+        except OSError as e:
+            print(f"Error deleting directory: {e}")
 
 # Add a route to GET controller state
 @app.route('/controller', methods=['GET'])
@@ -299,11 +315,7 @@ def update_train(train_id):
 
         # Delete the associated directory and picture file
         directory_path = os.path.join(app.config['UPLOAD_FOLDER'], train_id)
-        if os.path.exists(directory_path):
-            try:
-                os.rmdir(directory_path)
-            except OSError as e:
-                print(f"Error deleting directory: {e}")
+        delete_directory_contents(directory_path)
 
         if result.deleted_count == 0:
             return jsonify({'message': f'Train {train_id} not found'}), 404
@@ -483,6 +495,131 @@ def control_accessory_state(accessory_number):
 @app.route('/accessories', methods=['GET'])
 def get_all_accessory_states():
     return jsonify(accessory_state), 200
+
+# Add an OPTIONS route for the same URL path
+@app.route('/function/', methods=['OPTIONS'])
+def options_function():
+    response = jsonify()
+    response.headers['Access-Control-Allow-Methods'] = 'POST'
+    return response
+
+# Add an OPTIONS route for '/function/<function_id>'
+@app.route('/function/<function_id>', methods=['OPTIONS'])
+def options_function_id(function_id):
+    response = jsonify()
+    response.headers['Access-Control-Allow-Methods'] = 'POST, PUT, DELETE'
+    return response
+
+# Route for retrieving all functions
+@app.route('/functions/', methods=['GET'])
+def get_all_functions():
+    functions_collection = db['functions']
+
+    # Retrieve all functions from the MongoDB collection
+    all_functions = list(functions_collection.find({}))
+
+    # Create a list to store the results
+    results = []
+
+    # Convert ObjectId to str for JSON serialization
+    for function in all_functions:
+        function["_id"] = str(function["_id"])
+        results.append(function)
+
+    # Return the array containing all functions as JSON response
+    return jsonify(results), 200
+
+# Example endpoint to add a new function
+@app.route('/function/', methods=['POST'])
+def add_function():
+    data = request.json
+    functions_collection = db['functions']
+
+    result = functions_collection.insert_one(data)
+    new_id = str(result.inserted_id)
+
+    return jsonify({'message': 'Function added successfully', '_id': new_id}), 201
+
+# API endpoint to get function data including metadata, and state
+@app.route('/function/<function_id>', methods=['GET', 'PUT', 'DELETE', 'POST'])
+def update_function(function_id):
+    functions_collection = db['functions']
+
+    if request.method == 'GET':
+        function = functions_collection.find_one({'_id': ObjectId(function_id)})
+
+        if not function:
+            return jsonify({'message': f'Function {function_id} not found'}), 404
+
+        # Convert ObjectId to string before serializing to JSON
+        function['_id'] = str(function['_id'])
+
+        return jsonify(function), 200
+
+    elif request.method == 'PUT':
+        data = request.json
+        # Remove the _id field from the data dictionary
+        if '_id' in data:
+            del data['_id']
+
+        function = functions_collection.find_one({'_id': ObjectId(function_id)})
+        if not function:
+            return jsonify({'message': f'Function {function_id} not found'}), 404
+
+        # Update the entire function document with the new data
+        functions_collection.replace_one({'_id': ObjectId(function_id)}, data)
+        return jsonify({'message': f'Function {function_id} updated successfully', '_id': function_id}), 200
+
+    elif request.method == 'DELETE':
+        result = functions_collection.delete_one({'_id': ObjectId(function_id)})
+
+        # Delete the associated directory and picture file
+        directory_path = os.path.join(app.config['UPLOAD_FOLDER'], function_id)
+        delete_directory_contents(directory_path)
+
+        if result.deleted_count == 0:
+            return jsonify({'message': f'Function {function_id} not found'}), 404
+
+        return jsonify({'message': f'Function {function_id} deleted successfully'}), 200
+
+    elif request.method == 'POST':
+        # Check if the POST request has a file part
+        if 'icon' not in request.files:
+            return jsonify({'message': 'No file part'}), 400
+
+        file = request.files['icon']
+
+        # If the user does not select a file, the browser submits an empty file
+        if file.filename == '':
+            return jsonify({'message': 'No selected file'}), 400
+
+        # Check if the function directory exists, and create it if not
+        directory_path = os.path.join(app.config['UPLOAD_FOLDER'], function_id)
+        if not os.path.exists(directory_path):
+            try:
+                os.makedirs(directory_path)
+            except OSError as e:
+                print(f"Error creating directory: {e}")
+                return jsonify({'message': 'Failed to create directory'}), 500
+
+        # Save the uploaded file with its original filename
+        file_path = os.path.join(directory_path, file.filename)
+        file.save(file_path)
+
+        return jsonify({'message': 'File uploaded successfully'}), 200
+
+@app.route('/function/<function_id>/<path:filename>', methods=['GET'])
+def serve_icon(function_id, filename):
+    # Construct the path to the icon file
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], function_id, filename)
+
+    # Check if the file exists
+    if os.path.isfile(file_path):
+        # Serve the file from the specified directory
+        return send_from_directory(os.path.dirname(file_path), filename)
+    else:
+        return jsonify({'message': 'Icon not found'}), 404
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)

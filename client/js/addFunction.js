@@ -43,6 +43,7 @@ function setupaddFunction(data) {
                 onSubmit: function (errors, values) {
                     if (errors) {
                         $('#functionRes').html('<p>Please correct the errors in your form</p>');
+                        console.log(errors);
                     } else {
                         var inputObject = values;
 
@@ -76,7 +77,9 @@ async function sendFunctionDataToServer(inputObject) {
         url = `//${server}/function/${inputObject._id}`;
         method = "PUT";
     } else {
+
         // If _id is not set, use POST to create new data
+        delete inputObject._id;
         url = `//${server}/function/`;
         method = "POST";
     }
@@ -123,7 +126,9 @@ async function sendFunctionDataToServer(inputObject) {
                 hiddenFunctionIDElement.value = newFunctionID;
             }
             $('#functionRes').html('<p>' + responseData.message + '</p>');
-            $('form').hide();
+            setTimeout(function() {
+                setupaddFunction(/* parameters if any */);
+            }, 2000);
         } else {
             console.error("Request failed with status:", response.status);
         }

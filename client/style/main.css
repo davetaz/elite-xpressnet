@@ -144,3 +144,99 @@ button {
 #jsonform-1-elt-LongName {
     width: 500px;
 }
+.cards tbody {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 0;
+    width: calc(100vw);
+}
+
+.cards tbody tr,
+.cards thead tr {
+    width: 400px;
+    height: 250px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: none !important;
+    margin-bottom: 10px;
+    position: relative; /* Make the tr element the positioning context */
+    background-color: white !important;
+}
+
+.cards tbody td,
+.cards thead th {
+    display: none; /* Hide all table cells by default */
+    width: 100%;
+    border: none !important;
+}
+
+.cards tbody td[data-column="Picture"] {
+    display: block; /* Display the picture column */
+    position: absolute; /* Position the image absolutely */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Ensure the image is behind other content */
+    overflow: hidden; /* Ensure the image does not overflow */
+}
+
+.cards tbody td img.tablePicture {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-height: 200px;
+    max-width: 90%;
+    object-fit: cover; /* Ensure the image covers the card */
+    z-index: 1; /* Ensure the image is behind other content */
+}
+
+.cards tbody td[data-column="LongName"],
+.cards tbody td[data-column="Edit"],
+.cards tbody td[data-column="DCCNumber"],
+.cards tbody td[data-column="Status"] {
+    display: block; /* Display the long name and edit columns */
+    position: relative; /* Position these elements relative to the card */
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    width: auto;
+    z-index: 10;
+}
+
+.cards tbody td[data-column="LongName"] {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    max-width: 230px;
+}
+
+.cards tbody td[data-column="DCCNumber"]::before {
+    content: "DCC# ";
+}
+
+.cards tbody td[data-column="DCCNumber"] {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.cards tbody td[data-column="Edit"] {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+}
+.cards tbody td[data-column="Status"] {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+}
+
+.cards thead {
+    display: none;
+}
