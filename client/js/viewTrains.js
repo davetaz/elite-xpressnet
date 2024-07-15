@@ -25,7 +25,7 @@ function setupviewTrains() {
         // Initialize the DataTable with columns
         var table = $('#trainTable').DataTable({
             columns: columns,
-            dom: 'Bfrtip', // Add export buttons
+            dom: 'frtBip', // Add export buttons
             buttons: [
                 'copy', 'csv', {
                     'text': '<i class="fa viewSwitch fa-table fa-fw" aria-hidden="true"></i>',
@@ -52,6 +52,9 @@ function setupviewTrains() {
                     }
                 }
             ],
+            language: {
+                searchPlaceholder: "Search"
+            },
             createdRow: function (row, data, dataIndex) {
                 // Add data-column attributes to each cell
                 $('td', row).each(function (colIndex) {
@@ -63,7 +66,6 @@ function setupviewTrains() {
             },
             drawCallback: function(settings) {
                 // Add 'cards' class by default on table initialization
-                console.log('called');
                 if (!$(this.api().table().node()).hasClass('cards') && firstLoad) {
                     $(this.api().table().node()).addClass('cards');
                 }

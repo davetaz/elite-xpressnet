@@ -26,10 +26,13 @@ function setupviewPanels() {
         // Initialize the DataTable with columns
         var table = $('#panelTable').DataTable({
             columns: columns,
-            dom: 'Bfrtip', // Add export buttons
+            dom: 'frtiBp', // Add export buttons
             buttons: [
                 'copy', 'csv'
-            ]
+            ],
+            language: {
+                searchPlaceholder: "Search"
+            },
         });
         // Make an HTTP GET request to fetch data from //${server}/trains/
         $.get(`//${server}/panels/`, function (data) {

@@ -16,7 +16,8 @@ nav {
 }
 .content {
     flex-grow: 1;
-  }
+    overflow-y: scroll;
+}
 section .padded {
     margin: 1em;
 }
@@ -45,59 +46,11 @@ button {
 }
 .container {
 }
-/* Media query for screens with a maximum width of 768px (mobile devices) */
-@media screen and (max-width: 768px) {
-    body {
-        overflow-y: hidden;
-    }
-    #trainContainer {
-        display: block; /* Change to a block layout for mobile */
-        margin-top: 0px;
-    }
-    #container2 {
-        display: none;
-    }
-    #container3 {
-        display: none;
-    }
-    #container4 {
-        display: none;
-    }
-    .container {
-        width: 100%; /* Full screen width for mobile */
-        min-height: calc(100vh - 180px); /* Allow the height to adjust to content */
-        text-align: center;
-        display: inline-grid;
-    }
-}
-
-/* Media query for screens with a minimum width of 769px (desktop and iPad) */
-@media screen and (min-width: 769px) {
-    #trainContainer {
-        margin-top: 20px;
-        display: block; /* Change to a block layout for mobile */
-        text-align: center;
-    }
-    .container {
-        display: inline-grid;
-        margin: 10px;
-        vertical-align: top;
-        border: 1px solid #ccc;
-        width: 370px;
-        height: 600px;
-        border-radius: 5px;
-    }
-    .container-selector {
-        display: none;
-    }
-}
-
 .train {
     display: inline-block;
     width: 100%;
     overflow-y: hidden;
 }
-
 .train-image {
     min-height: 100px;
     display: flex;
@@ -140,7 +93,10 @@ button {
     top: -10px;
     position: relative;
 }
-#serverSettings, #addTrain {
+#addTrain, #addPanel {
+    width: 100%;
+}
+#serverSettings {
     margin: 30px;
 }
 #jsonform-1-elt-LongName {
@@ -151,9 +107,49 @@ button {
     flex-wrap: wrap;
     justify-content: space-around;
     padding: 0;
-    width: calc(100vw);
+    width: calc(100vw - 2em);
+}
+.dataTable {
+    margin-bottom: 0.5em !important;
+}
+.dt-search {
+    width: 100%;
+    text-align: center;
+}
+.dt-search label {
+    display: none;
+}
+.dt-search input {
+    width: 90%;
+    line-height: 1.5em;
+    font-size: 1.2em;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-bottom: 1em;
+    text-align: center;
+}
+.dt-info {
+    display: inline-block;
+}
+.dt-paging {
+    float: right;
+}
+.dt-buttons {
+    display: inline;
 }
 
+#accessoriesTable .accessorySettings {
+    text-align: center;
+}
+#accessoriesTable .accessorySettings button {
+    padding: 10px 20px;
+}
+#accessoriesTable .configure-button {
+    float: unset !important;
+    top: 0px !important;
+    right: 0px !important;
+
+}
 .cards tbody tr,
 .cards thead tr {
     width: 400px;
@@ -165,6 +161,10 @@ button {
     margin-bottom: 10px;
     position: relative; /* Make the tr element the positioning context */
     background-color: white !important;
+}
+#accessoriesTable.cards tbody tr {
+    width: 300px;
+    height: 180px;
 }
 
 .cards tbody td,
@@ -196,6 +196,11 @@ button {
     z-index: 1; /* Ensure the image is behind other content */
 }
 
+.cards tbody td.accessoryName,
+.cards tbody td.accessoryControl,
+.cards tbody td.accessoryType,
+.cards tbody td.accessoryLocation,
+.cards tbody td.DCCNumber,
 .cards tbody td[data-column="LongName"],
 .cards tbody td[data-column="Edit"],
 .cards tbody td[data-column="DCCNumber"],
@@ -207,38 +212,113 @@ button {
     padding: 5px 10px;
     border-radius: 8px;
     font-weight: bold;
-    width: auto;
+    width: max-content;
     z-index: 10;
 }
 
-.cards tbody td[data-column="LongName"] {
+.cards tbody td.accessoryControl {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding-left: 15px;
+    padding-top: 10px;
+}
+
+.cards tbody td[data-column="LongName"],
+.cards tbody td.accessoryName {
     position: absolute;
     top: 10px;
     left: 10px;
     max-width: 230px;
 }
 
-.cards tbody td[data-column="DCCNumber"]::before {
+.cards tbody td[data-column="DCCNumber"]::before,
+.cards tbody td.DCCNumber::before {
     content: "DCC# ";
 }
 
-.cards tbody td[data-column="DCCNumber"] {
+.cards tbody td[data-column="DCCNumber"],
+.cards tbody td.DCCNumber {
     position: absolute;
     top: 10px;
     right: 10px;
 }
 
-.cards tbody td[data-column="Edit"] {
+.cards tbody td[data-column="Edit"],
+.cards tbody td.accessoryLocation {
     position: absolute;
     bottom: 10px;
     left: 10px;
 }
-.cards tbody td[data-column="Status"] {
+
+.cards tbody td[data-column="Status"],
+.cards tbody td.accessoryType {
     position: absolute;
     bottom: 10px;
     right: 10px;
 }
 
+.cards tbody td.accessoryType::first-letter { text-transform: capitalize; }
+
 .cards thead {
     display: none;
+}
+
+/* Media query for screens with a maximum width of 768px (mobile devices) */
+@media screen and (max-width: 768px) {
+    body {
+        /* overflow-y: hidden; */
+        max-height: calc(100vh);
+    }
+    #trainContainer {
+        display: block; /* Change to a block layout for mobile */
+        margin-top: 0px;
+    }
+    #container2 {
+        display: none;
+    }
+    #container3 {
+        display: none;
+    }
+    #container4 {
+        display: none;
+    }
+    .container {
+        width: 100%; /* Full screen width for mobile */
+        min-height: calc(100vh - 180px); /* Allow the height to adjust to content */
+        text-align: center;
+        display: inline-grid;
+    }
+    .dt-info {
+        display: none;
+    }
+    .dt-paging {
+        max-width: 80%;
+    }
+    .dt-buttons {
+        display: none;
+    }
+
+}
+
+/* Media query for screens with a minimum width of 769px (desktop and iPad) */
+@media screen and (min-width: 769px) {
+    #trainContainer {
+        margin-top: 20px;
+        display: block; /* Change to a block layout for mobile */
+        text-align: center;
+    }
+    .container {
+        display: inline-grid;
+        margin: 10px;
+        vertical-align: top;
+        border: 1px solid #ccc;
+        width: 370px;
+        height: 600px;
+        border-radius: 5px;
+    }
+    .container-selector {
+        display: none;
+    }
 }

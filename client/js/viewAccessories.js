@@ -23,11 +23,12 @@ function setupviewAccessories() {
             $('#accessoriesTable').DataTable({
                 data: elements,
                 columns: [
-                    { title: "Name", data: "config.Name", defaultContent: "", width: "20%" },
-                    { title: "Type", data: "type", defaultContent: "", width: "10%" },
+                    { title: "Name", data: "config.Name", className: "accessoryName", defaultContent: "", width: "20%" },
+                    { title: "Type", data: "type", className:"accessoryType", defaultContent: "", width: "10%" },
                     {
                         title: "DCC Number(s)",
                         data: "config.DCCNumber",
+                        className: "DCCNumber",
                         render: function (data, type, row) {
                             if (row.type === "signal") {
                                 return [...new Set(row.config.Aspects.map(aspect => aspect.DCCNumber))].join(', ');
@@ -37,33 +38,43 @@ function setupviewAccessories() {
                         defaultContent: "",
                         width: "10%"
                     },
-                    { title: "Panel Name", data: "panelName", defaultContent: "", width: "20%" },
+                    { title: "Panel Name", data: "panelName", className: "accessoryLocation", defaultContent: "", width: "20%" },
                     {
                         title: "Control",
                         data: null,
+                        className: "accessoryControl",
                         render: function (data, type, row) {
                             if (row.type === "point") {
                                 return `
-                                    <button onclick="configureElement('${row.id}')" class="configure-button"><i class="fa fa-cog"></i></button>
-                                    <button onclick="setPointState('${row.id}', 'normal')" class="state-button">${row.config.Normal || "Normal"}</button>
-                                    <button onclick="setPointState('${row.id}', 'switched')" class="state-button">${row.config.Switched || "Switched"}</button>
+                                    <button onclick="setPointState('${row.id}', 'normal')">${row.config.Normal || "Normal"}</button>
+                                    <button onclick="setPointState('${row.id}', 'switched')">${row.config.Switched || "Switched"}</button>
                                 `;
                             } else if (row.type === "signal") {
-                                return `
-                                    <button onclick="configureElement('${row.id}')" class="configure-button"><i class="fa fa-cog"></i></button>
-                                    ${_generateSignalButtons(row.config, row.id)}
-                                `;
+                                return _generateSignalButtons(row.config, row.id);
                             }
                             return "";
                         },
                         defaultContent: "",
-                        width: "40%"
+                        width: "30%"
+                    },
+                    {
+                        title: "Settings",
+                        data: null,
+                        className: "accessorySettings",
+                        render: function (data, type, row) {
+                            return `
+                                <button onclick="configureElement('${row.id}')"><i class="fa fa-cog" style="font-size: 2em;"></i></button>
+                            `;
+                        },
+                        defaultContent: "",
+                        width: "10%"
                     }
+
                 ],
-                dom: 'Bfrtip',
+                dom: 'frtBip',
                 buttons: [
                     'copy', 'csv', {
-                        'text': '<i class="fa viewSwitch fa-id-badge fa-fw" aria-hidden="true"></i>',
+                        'text': '<i class="fa viewSwitch fa-table fa-fw" aria-hidden="true"></i>',
                         'action': function (e, dt, node) {
                             firstLoad = false;
                             const tableNode = $(dt.table().node());
@@ -90,12 +101,16 @@ function setupviewAccessories() {
                         }
                     }
                 ],
+                language: {
+                    searchPlaceholder: "Search"
+                },
                 drawCallback: function(settings) {
                     // Add 'cards' class by default on table initialization
                     if (!$(this.api().table().node()).hasClass('cards') && firstLoad) {
                         $(this.api().table().node()).addClass('cards');
                     }
-                }
+                },
+                autoWidth: false // Disable automatic column sizing
             });
         }
     });
