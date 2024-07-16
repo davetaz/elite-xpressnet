@@ -11,9 +11,20 @@ button {
     margin-left: 6px;
     display: grid;
     grid-template-columns: repeat(2, 2fr);
+    max-height: 365px;
+    overflow-y: scroll;
+}
+.function-panel button {
+  height: 80px;
+  width: 80px;
+  padding: 5px;
+}
+.function-panel button img {
+  max-width: 54%;
 }
 .function-panel button name {
     font-size: 0.7em;
+    display: inline-block;
 }
 
 button.active {

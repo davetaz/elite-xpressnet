@@ -40,3 +40,62 @@
         </div>
     </div>
 </div>
+
+<template id="trainTemplate">
+    <div class="train">
+        <section class="train-details">
+            <div class="train-image">
+                <img src="images/noun-train-1351954.png"/>
+            </div>
+            <span class="bubble train-name">
+                Train
+            </span>
+            <span class="bubble DCCNumber">
+                DCC #<span class="train-number"></span>
+            </span>
+            <span class="bubble bottomRight">Speed: <span class="throttle-value">0</span></span>
+        </section>
+        <section class="train-control">
+            <panel class="throttle-panel">
+                <div class="train-throttle-container">
+                    <input type="range" class="throttle" min="0" max="100" value="0" orient="vertical">
+                </div>
+
+                <div class="stop-button">
+                    <button id="Stop">Stop</button>
+                </div>
+
+                <div class="direction-buttons">
+                    <button id="reverse">Reverse</button>
+                    <button id="forward" class="active">Forward</button>
+                </div>
+            </panel>
+            <panel class="function-panel">
+                <button id="f0" class="function-button">
+                    <img src="images/function-icons/Directional_lights.png" alt="Icon 1">
+                    <name>Directional lights</name>
+                </button>
+                <button id="f1" class="function-button">
+                    <img src="images/function-icons/Interior_lights.png" alt="Icon 2">
+                    <name>Interior lights</name>
+                </button>
+                <button id="f2" class="function-button">
+                    <img src="images/function-icons/Function.png" alt="Icon 3">
+                    <name>Function #3</name>
+                </button>
+                <button id="f3" class="function-button">
+                    <img src="images/function-icons/Function.png" alt="Icon 4">
+                    <name>Function #4</name>
+                </button>
+                <button id="f4" class="function-button">
+                    <img src="images/function-icons/Function.png" alt="Icon 3">
+                    <name>Function #3</name>
+                </button>
+                <button id="f5" class="function-button">
+                    <img src="images/function-icons/Function.png" alt="Icon 4">
+                    <name>Function #4</name>
+                </button>
+            </panel>
+        </section>
+    </div>
+</template>

@@ -13,7 +13,7 @@ input[type=range][orient=vertical] {
     width: 160px;
     height: 40px;
     border-radius: 3px;
-    background: #ffffff;
+    background: rgb(33, 37, 41);
     cursor: pointer;
     left: -70px;
     position: relative;
@@ -24,17 +24,17 @@ input[type=range][orient=vertical] {
     width: 160px;
     height: 40px;
     border-radius: 3px;
-    background: #ffffff;
+    background: rgb(33, 37, 41);
     cursor: pointer;
     left: -40px;
     position: relative;
   }
 input[type=range]::-moz-range-track {
     height: 250px;
-    width: 15px;
+    width: 10px;
     cursor: pointer;
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-    background: #3071a9;
+    /*box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;*/
+    background: rgb(33, 37, 41);
     border-radius: 1.3px;
-    border: 0.2px solid #010101;
+    /*border: 0.2px solid #010101*/;
   }
