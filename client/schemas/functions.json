@@ -2,6 +2,10 @@
     "_id": {
         "type": "hidden"
     },
+    "_protected": {
+        "type": "boolean",
+        "default": false
+    },
     "Name": {
         "type": "string",
         "maxLength": 20,

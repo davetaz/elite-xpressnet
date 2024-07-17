@@ -4,8 +4,10 @@ from pymongo import MongoClient
 import json
 from bson import json_util, ObjectId
 from flask_cors import CORS
+from urllib.parse import urlparse, unquote
 import configparser  # Import the configparser module
 import shutil
+import requests
 
 import time
 import threading
@@ -323,18 +325,14 @@ def update_train(train_id):
         return jsonify({'message': f'Train {train_id} deleted successfully'}), 200
 
     elif request.method == 'POST':
-        # Check if the POST request has a file part
-        if 'picture' not in request.files:
-            return jsonify({'message': 'No file part'}), 400
+        trains_collection = db['trains']
+        train = trains_collection.find_one({'_id': ObjectId(train_id)})
 
-        file = request.files['picture']
+        if not train:
+            return jsonify({'message': f'Train {train_id} not found'}), 404
 
-        # If the user does not select a file, the browser submits an empty file
-        if file.filename == '':
-            return jsonify({'message': 'No selected file'}), 400
-
-        # Check if the train directory exists, and create it if not
         directory_path = os.path.join(app.config['UPLOAD_FOLDER'], train_id)
+        delete_directory_contents(directory_path)
         if not os.path.exists(directory_path):
             try:
                 os.makedirs(directory_path)
@@ -342,11 +340,35 @@ def update_train(train_id):
                 print(f"Error creating directory: {e}")
                 return jsonify({'message': 'Failed to create directory'}), 500
 
-        # Save the uploaded file with its original filename
-        file_path = os.path.join(directory_path, file.filename)
-        file.save(file_path)
+        # Check if the POST request has a file part
+        if 'picture' in request.files:
+            file = request.files['picture']
 
-        return jsonify({'message': 'File uploaded successfully'}), 200
+            if file.filename == '':
+                return jsonify({'message': 'No selected file'}), 400
+
+            # Save the uploaded file with its original filename
+            file_path = os.path.join(directory_path, file.filename)
+            file.save(file_path)
+
+        # Check if the POST request has an image URL
+        elif 'imageUrl' in request.json:
+            image_url = "https:" + request.json['imageUrl']
+            parsed_url = urlparse(image_url)
+            image_name = os.path.basename(parsed_url.path)
+            response = requests.get(image_url, stream=True)
+
+            if response.status_code == 200:
+                file_path = os.path.join(directory_path, image_name)
+                with open(file_path, 'wb') as out_file:
+                    shutil.copyfileobj(response.raw, out_file)
+            else:
+                return jsonify({'message': 'Failed to download image from URL'}), 400
+
+        else:
+            return jsonify({'message': 'No file or URL provided'}), 400
+
+        return jsonify({'message': 'Image uploaded successfully'}), 200
 
 # API endpoint to get panel data including metadata, functions, and state
 @app.route('/panel/<panel_id>', methods=['GET', 'PUT', 'DELETE', 'POST'])
@@ -422,7 +444,6 @@ def update_panel(panel_id):
 
 @app.route('/train/<train_id>/<path:filename>', methods=['GET'])
 def serve_picture(train_id, filename):
-    print('jello')
     # Construct the path to the picture file
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], train_id, filename)
 

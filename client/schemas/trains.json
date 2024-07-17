@@ -20,17 +20,21 @@
     "ShortName": {
       "type": "string",
       "maxLength": 20,
-      "title": "Short Name (required)",
+      "title": "Short Name",
       "required": true
     },
     "LongName": {
       "type": "string",
-      "title": "LongName"
+      "title": "Long Name"
     },
     "Status": {
       "type": "string",
       "enum": ["","Operational", "Non operational", "Static", "Other"],
       "title": "Status"
+    },
+    "Active": {
+      "type": "boolean",
+      "default": "false"
     },
     "Picture": {
       "type": "file",
@@ -43,60 +47,43 @@
     "DCCStatus": {
       "type": "string",
       "enum": ["","Incompatible", "No socket", "Ready", "Fitted"],
-      "title": "DCCStatus"
+      "title": "DCC Status"
     },
     "DCCNumber": {
       "type": "integer",
       "minimum": 1,
       "maximum": 9999,
-      "title": "DCCNumber"
+      "title": "DCC Number"
+    },
+    "DCCFunctions": {
+      "type": "string",
+      "title": "DCC Function Map",
+      "enum": ["","Default"]
     },
     "DCCDecoders": {
       "type": "array",
+      "title": "DCC Decoders",
       "items": {
         "type": "object",
         "properties": {
           "SocketLocation": {
             "type": "string",
             "maxLength": 255,
-            "title": "SocketLocation"
+            "title": "Socket Location"
           },
           "SocketType": {
             "type": "string",
             "enum": ["", "4 Pin", "6 Pin", "8 Pin", "21 Pin", "Next 18", "PluX 8", "PluX 16", "PluX 22"],
-            "title": "SocketType"
+            "title": "Socket Type"
           },
           "ChipModel": {
             "type": "string",
-            "title": "ChipModel"
+            "title": "Chip Model"
           },
           "ChipType": {
             "type": "string",
             "enum": ["", "motor/function", "multifunction sound", "sound only", "function only"],
-            "title": "ChipType"
-          }
-        }
-      }
-    },
-    "DCCFunctions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "FunctionNumber": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 28,
-            "title": "FunctionNumber"
-          },
-          "FunctionType": {
-            "type": "string",
-            "enum": ["", "latching", "momentary"],
-            "title": "FunctionType"
-          },
-          "Function": {
-            "type": "string",
-            "title": "Function"
+            "title": "Chip Type"
           }
         }
       }

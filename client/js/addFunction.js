@@ -4,6 +4,7 @@ function setupaddFunction(data) {
     }
     $('#addFunctionForm').html("");
     $('#functionRes').html("");
+    $('.functionImg').remove();
     $('form').show();
 
     // Fetch the schema from "schemas/functions.json"

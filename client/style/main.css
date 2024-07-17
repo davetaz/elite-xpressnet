@@ -92,16 +92,14 @@ button {
     bottom: 10px;
     right: 10px;
 }
-.train-control {
-    margin: 0px 10px;
-}
-
 .train-image img {
     max-height: 180px;
     vertical-align: middle;
 }
-.trainImg {
+.trainImg, .functionImg {
     max-height: 300px;
+    float: right;
+    margin-right: 3em;
 }
 .train-address {
     color: grey;
@@ -109,18 +107,63 @@ button {
     font-size: 0.7em;
 }
 .train-control {
+    margin: 0px 10px;
+}
+.train-control {
     display: flex;
+    align-items: flex-end;
 }
 .train-control panel {
     flex: 1;
+    flex-direction: column; /* Arrange children in a column */
+    justify-content: flex-end; /* Align children to the bottom */
 }
-#addTrain, #addPanel {
+.inPanelNav {
+    padding: 0px;
+    text-align: center;
+    background: none;
+}
+.inPanelNav #addTrain, .inPanelNav #viewFunctions {
+    width: 45%;
+}
+#addPanel {
     width: 100%;
 }
 #serverSettings {
     margin: 30px;
 }
-#jsonform-1-elt-LongName {
+form label {
+    display: inline-block;
+    min-width: 200px;
+}
+form .controls {
+    display: inline-block;
+}
+form .ui-sortable {
+    padding: 0;
+}
+form .ui-sortable li {
+    display: table;
+}
+form .ui-sortable li fieldset  {
+    display: table-cell;
+}
+form .ui-sortable li ._jsonform-array-buttons {
+    display: table-cell;
+    padding: 10px;
+    vertical-align: middle;
+}
+form .jsonform-error-DCCDecoders label {
+    vertical-align: top;
+    top: 10px;
+    position: relative;
+}
+form .jsonform-error-Picture label {
+    vertical-align: top;
+    top: 15px;
+    position: relative;
+}
+form input[name="LongName"] {
     width: 500px;
 }
 .cards tbody {
@@ -187,6 +230,13 @@ button {
     width: 300px;
     height: 180px;
 }
+#functionTable.cards tbody tr {
+    width: 200px;
+    height: 200px;
+    background-color: transparent !important;
+    border: 1px solid white !important;
+    border-radius: 5px;
+}
 
 .cards tbody td,
 .cards thead th {
@@ -195,7 +245,7 @@ button {
     border: none !important;
 }
 
-.cards tbody td[data-column="Picture"] {
+#trainTable.cards tbody td[data-column="Picture"] {
     display: block; /* Display the picture column */
     position: absolute; /* Position the image absolutely */
     top: 0;
@@ -206,7 +256,7 @@ button {
     overflow: hidden; /* Ensure the image does not overflow */
 }
 
-.cards tbody td img.tablePicture {
+#trainTable.cards tbody td img.tablePicture {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -217,15 +267,17 @@ button {
     z-index: 1; /* Ensure the image is behind other content */
 }
 
-.cards tbody td.accessoryName,
-.cards tbody td.accessoryControl,
-.cards tbody td.accessoryType,
-.cards tbody td.accessoryLocation,
-.cards tbody td.DCCNumber,
-.cards tbody td[data-column="LongName"],
+#accessoriesTable.cards tbody td.accessoryName,
+#accessoriesTable.cards tbody td.accessoryControl,
+#accessoriesTable.cards tbody td.accessoryType,
+#accessoriesTable.cards tbody td.accessoryLocation,
+#accessoriesTable.cards tbody td.DCCNumber,
+#trainTable.cards tbody td[data-column="LongName"],
+#functionTable.cards tbody td[data-column="Name"],
+#functionTable.cards tbody td[data-column="Icon"],
 .cards tbody td[data-column="Edit"],
-.cards tbody td[data-column="DCCNumber"],
-.cards tbody td[data-column="Status"] {
+#trainTable.cards tbody td[data-column="DCCNumber"],
+#trainTable.cards tbody td[data-column="Status"] {
     display: block; /* Display the long name and edit columns */
     position: relative; /* Position these elements relative to the card */
     background-color: rgba(0, 0, 0, 0.7);
@@ -237,7 +289,24 @@ button {
     z-index: 10;
 }
 
-.cards tbody td.accessoryControl {
+#functionTable.cards tbody td[data-column="Name"] {
+    position: relative;
+    padding: 5px 10px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: transparent;
+    color: white;
+    top: 150px;
+}
+#functionTable.cards tbody td[data-column="Icon"] {
+    margin-left: auto;
+    margin-right: auto;
+    background-color: transparent;
+    top: 10px;
+    position: relative;
+}
+
+#accessoriesTable.cards tbody td.accessoryControl {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -246,41 +315,42 @@ button {
     padding-top: 10px;
 }
 
-.cards tbody td[data-column="LongName"],
-.cards tbody td.accessoryName {
+#trainTable.cards tbody td[data-column="LongName"],
+#accessoriesTable.cards tbody td.accessoryName {
     position: absolute;
     top: 10px;
     left: 10px;
     max-width: 230px;
 }
 
-.cards tbody td[data-column="DCCNumber"]::before,
-.cards tbody td.DCCNumber::before {
+#trainTable.cards tbody td[data-column="DCCNumber"]::before,
+#accessoriesTable.cards tbody td.DCCNumber::before {
     content: "DCC# ";
 }
 
-.cards tbody td[data-column="DCCNumber"],
-.cards tbody td.DCCNumber {
+#trainTable.cards tbody td[data-column="DCCNumber"],
+#functionTable.cards tbody td[data-column="Edit"],
+#accessoriesTable.cards tbody td.DCCNumber {
     position: absolute;
     top: 10px;
     right: 10px;
 }
 
-.cards tbody td[data-column="Edit"],
-.cards tbody td.accessoryLocation {
+#trainTable.cards tbody td[data-column="Edit"],
+#accessoriesTable.cards tbody td.accessoryLocation {
     position: absolute;
     bottom: 10px;
     left: 10px;
 }
 
-.cards tbody td[data-column="Status"],
-.cards tbody td.accessoryType {
+#trainTable.cards tbody td[data-column="Status"],
+#accessoriesTable.cards tbody td.accessoryType {
     position: absolute;
     bottom: 10px;
     right: 10px;
 }
 
-.cards tbody td.accessoryType::first-letter { text-transform: capitalize; }
+#accessoriesTable.cards tbody td.accessoryType::first-letter { text-transform: capitalize; }
 
 .cards thead {
     display: none;
@@ -319,6 +389,10 @@ button {
     }
     .dt-buttons {
         display: none;
+    }
+    .trainImg, .functionImg {
+        margin-right: 0;
+        margin-bottom: 1em;
     }
 
 }

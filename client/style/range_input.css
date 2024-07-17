@@ -10,10 +10,10 @@ input[type=range][orient=vertical] {
     -webkit-appearance: none;
     box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
     border: 1px solid #000000;
-    width: 160px;
-    height: 40px;
+    width: 120px;
+    height: 20px;
     border-radius: 3px;
-    background: rgb(33, 37, 41);
+    background: #007bff;
     cursor: pointer;
     left: -70px;
     position: relative;
@@ -21,10 +21,10 @@ input[type=range][orient=vertical] {
  input[type=range]::-moz-range-thumb {
     box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
     border: 1px solid #000000;
-    width: 160px;
-    height: 40px;
+    width: 120px;
+    height: 20px;
     border-radius: 3px;
-    background: rgb(33, 37, 41);
+    background: #007bff;
     cursor: pointer;
     left: -40px;
     position: relative;

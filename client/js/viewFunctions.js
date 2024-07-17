@@ -1,4 +1,5 @@
 function setupviewFunctions() {
+    let firstLoad = true;
 
     if ($.fn.DataTable.isDataTable('#functionTable')) {
         // Destroy the existing DataTable if it exists
@@ -25,10 +26,51 @@ function setupviewFunctions() {
         // Initialize the DataTable with columns
         var table = $('#functionTable').DataTable({
             columns: columns,
-            dom: 'Bfrtip', // Add export buttons
+            dom: 'frtBip', // Add export buttons
             buttons: [
-                'copy', 'csv'
-            ]
+                'copy', 'csv', {
+                    'text': '<i class="fa viewSwitch fa-table fa-fw" aria-hidden="true"></i>',
+                    'action': function (e, dt, node) {
+                        firstLoad = false;
+
+                        const tableNode = $(dt.table().node());
+                        const isCardsView = tableNode.hasClass('cards');
+
+                        if (isCardsView) {
+                            tableNode.removeClass('cards');
+                            $('.viewSwitch', node).removeClass('fa-table').addClass('fa-id-badge');
+                            // Switch to table view
+                            dt.draw('page');
+                        } else {
+                            tableNode.addClass('cards');
+                            $('.viewSwitch', node).removeClass('fa-id-badge').addClass('fa-table');
+                            dt.draw('page');
+                        }
+                    },
+                    'className': 'btn-sm',
+                    'attr': {
+                        'title': 'Change views',
+                    }
+                }
+            ],
+            language: {
+                searchPlaceholder: "Search"
+            },
+            createdRow: function (row, data, dataIndex) {
+                // Add data-column attributes to each cell
+                $('td', row).each(function (colIndex) {
+                    var columnName = columns[colIndex].data;
+                    if (data[columnName] != "") {
+                        $(this).attr('data-column', columnName);
+                    }
+                });
+            },
+            drawCallback: function(settings) {
+                // Add 'cards' class by default on table initialization
+                if (!$(this.api().table().node()).hasClass('cards') && firstLoad) {
+                    $(this.api().table().node()).addClass('cards');
+                }
+            }
         });
 
         // Make an HTTP GET request to fetch data from //${server}/functions/

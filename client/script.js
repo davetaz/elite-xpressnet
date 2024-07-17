@@ -95,7 +95,6 @@ async function pollServer() {
 }
 
 function loadSection(id) {
-    console.log("loadSection " + id)
     var element = document.getElementById(id);
     fetch(`sections/${id}.html`)
     .then(response => response.text())
