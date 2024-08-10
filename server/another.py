@@ -61,58 +61,10 @@ def send(message):
             print()
         trys += 1
 
-def receive_response(expected_length=3):
-    response = bytearray()
-    while len(response) < expected_length:
-        if ser.in_waiting > 0:
-            response.extend(ser.read(expected_length - len(response)))
-    return response
-
-def get_xpressnet_interface_version():
-    message = bytearray(b'\xF0\x21')
-    parity(message)
-    send(message)
-    response = receive_response(2)
-    version = f"{(response[0] >> 4)}.{response[0] & 0x0F}, {response[1] >> 4}.{response[1] & 0x0F}"
-    return version
-
-def get_xpressnet_interface_address():
-    message = bytearray(b'\xF0\x21')
-    parity(message)
-    send(message)
-    response = receive_response(1)
-    return response[0]
-
-def get_xpressnet_interface_status():
-    message = bytearray(b'\xF0\x22')
-    parity(message)
-    send(message)
-    response = receive_response(1)
-    return bool(response[0] & 0x01)
-
-def get_xpressnet_version():
-    message = bytearray(b'\xF0\x22')
-    parity(message)
-    send(message)
-    response = receive_response(1)
-    return f"{response[0] >> 4}.{response[0] & 0x0F}"
-
 class Train:
     def __init__(self, address):
         self.address = address
         self.group = [0, 0, 0]
-
-    def throttle(self, speed, direction):
-        message = bytearray(b'\xE4\x00\x00\x00\x00')
-        message[1] = 0x13
-        struct.pack_into(">H", message, 2, self.address)
-        message[4] = speed
-        if direction == FORWARD:
-            message[4] |= 0x80
-        elif direction == REVERSE:
-            message[4] &= 0x7F
-        parity(message)
-        send(message)
 
     def function(self, num, switch):
         function_table = [
@@ -145,53 +97,15 @@ class Train:
         parity(message)
         send(message)
 
-class Accessory:
-    def __init__(self, address):
-        self.offset = address % 4
-        self.address = address // 4
-
-    def activate(self):
-        message = bytearray(b'\x52\x00\x00')
-        message[1] = self.address
-        message[2] = self.offset
-        message[2] |= 0x80
-        message[2] |= 0x01
-        parity(message)
-        send(message)
-
-    def deactivate(self):
-        message = bytearray(b'\x52\x00\x00')
-        message[1] = self.address
-        message[2] = self.offset
-        message[2] |= 0x80
-        message[2] &= 0xFE
-        parity(message)
-        send(message)
-
-    def activateOutput1(self):
-        message = bytearray(b'\x52\x00\x00')
-        message[1] = self.address
-        message[2] = 0x80
-        message[2] |= (self.offset & 0x03) << 1
-        parity(message)
-        send(message)
-
-    def activateOutput2(self):
-        message = bytearray(b'\x52\x00\x00')
-        message[1] = self.address
-        message[2] = 0x81
-        message[2] |= (self.offset & 0x03) << 1
-        parity(message)
-        send(message)
-
 
 if __name__ == "__main__":
     set_debug(1)
     connection_open('/dev/ttyACM0', 9600)
 
-    print("Interface version:", get_xpressnet_interface_version())
-    print("Interface address:", get_xpressnet_interface_address())
-    print("Interface is connected to Command Station:", get_xpressnet_interface_status())
-    print("XpressNet version supported:", get_xpressnet_version())
+    # Create a Train instance for locomotive address 3
+    loco = Train(3)
+
+    # Turn function 0 on (usually lights) for loco 3
+    loco.function(0, ON)
 
     connection_close()
