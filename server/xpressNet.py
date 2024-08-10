@@ -4,6 +4,7 @@ import logging
 import struct
 import sys
 import serial  # Import pySerial module
+import time
 
 from enum import IntEnum
 from functools import reduce
