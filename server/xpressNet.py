@@ -150,10 +150,10 @@ class XpressNet:
     def __read(self, length, retries=3, retry_delay=1):
         """
         Read a specified number of bytes from the serial port with retries.
-        :param length: Number of bytes to read
-        :param retries: Number of times to retry if the read fails
-        :param retry_delay: Delay in seconds between retries
-        :return: Bytearray of received data
+        :param length: Number of bytes to read.
+        :param retries: Number of times to retry if the read fails.
+        :param retry_delay: Delay in seconds between retries.
+        :return: Bytearray of received data.
         """
         for attempt in range(retries):
             data = self.serial_port.read(length)
@@ -216,32 +216,29 @@ class XpressNet:
         else:
             raise XpressNetException(f"Unknown response code 0x{code:02X}")
 
-    def __handle_response(self, cmd):
-        while True:
-            bytes = self.__read(3)
+    def __handle_response(self, cmd, retries=3, retry_delay=1):
+        for attempt in range(retries):
             try:
+                bytes = self.__read(3)
                 (preamble, header) = struct.unpack("!HB", bytes)
-            except struct.error:
-                logging.warning(f"Unable to process data 0x{self.__hex(bytes)}")
-                continue
-            code = Command(header & 0xF0)
-            length = header & 0x0F  # the length, without the command code
-            try:
+                code = Command(header & 0xF0)
+                length = header & 0x0F  # the length, without the command code
                 data = self.__recv_checksummed_data(header, length)
-            except XpressNetException as e:
-                logging.warning(f"Unable to process message {code}({length}): {e.args}")
-                continue
-            if preamble == 0xFFFE:
-                return self.__get_status(cmd, False, code, length, data)
-            if preamble == 0xFFFD:
-                # broadcast message: page 13, chapter 3
-                s = self.__get_status(cmd, True, code, length, data)
-                if type(s) == TrackStatusMessage:
-                    self.track_status = s.state
-                logging.debug(f"broadcast: {self.last_broadcast}")
-                self.last_broadcast = s
-                return s
-            raise XpressNetException(f"Unknown response data 0x{preamble:04X}")
+                if preamble == 0xFFFE:
+                    return self.__get_status(cmd, False, code, length, data)
+                if preamble == 0xFFFD:
+                    # broadcast message: page 13, chapter 3
+                    s = self.__get_status(cmd, True, code, length, data)
+                    if type(s) == TrackStatusMessage:
+                        self.track_status = s.state
+                    logging.debug(f"broadcast: {self.last_broadcast}")
+                    self.last_broadcast = s
+                    return s
+                raise XpressNetException(f"Unknown response data 0x{preamble:04X}")
+            except (struct.error, XpressNetException) as e:
+                logging.warning(f"Attempt {attempt + 1} failed with error: {e}")
+                time.sleep(retry_delay)
+        raise XpressNetException(f"Failed to handle response after {retries} attempts")
 
     def __recv_checksummed_data(self, previous, length):
         """
@@ -269,22 +266,38 @@ class XpressNet:
     def __bcd(self, data):
         return f"{data >> 4}.{data & 0x0F}"
 
-    def cmd(self, cmd, params=None, expected=None):
+    def cmd(self, cmd, params=None, expected=None, send_retries=3, receive_retries=3, retry_delay=1):
+        """
+        Send a command and handle response with retries.
+        :param cmd: The command to send.
+        :param params: The parameters for the command.
+        :param expected: The expected command response.
+        :param send_retries: Number of times to retry sending the command if no response is received.
+        :param receive_retries: Number of times to retry reading the response if no data is received.
+        :param retry_delay: Delay in seconds between retries.
+        :return: The response data.
+        """
         cmd = Command(cmd & 0xF0)
         params = params if params else bytearray()
         if expected is None:
             expected = cmd
 
-        self.send(bytearray([cmd | len(params)]) + bytearray(params))
-        data = self.__handle_response(cmd)
-        logging.debug(f"{str(cmd)}({self.__hex(params)}): {str(data.status)} = {self.__hex(data.data)}")
+        for attempt in range(send_retries):
+            self.send(bytearray([cmd | len(params)]) + bytearray(params))
+            try:
+                data = self.__handle_response(cmd, retries=receive_retries, retry_delay=retry_delay)
+                logging.debug(f"{str(cmd)}({self.__hex(params)}): {str(data.status)} = {self.__hex(data.data)}")
 
-        if data.code == 0:
-            # non-immediate response, data contains specifics
-            return data
-        if data.code != expected:
-            raise XpressNetException(f"Response code 0x{data.code:02X} != 0x{expected:02X}")
-        return data
+                if data.code == 0:
+                    # non-immediate response, data contains specifics
+                    return data
+                if data.code != expected:
+                    raise XpressNetException(f"Response code 0x{data.code:02X} != 0x{expected:02X}")
+                return data
+            except XpressNetException as e:
+                logging.warning(f"Attempt {attempt + 1} failed with error: {e}")
+                time.sleep(retry_delay)
+        raise XpressNetException(f"Failed to get response after {send_retries} attempts")
 
     def receive_one(self):
         self.__handle_response(None)
