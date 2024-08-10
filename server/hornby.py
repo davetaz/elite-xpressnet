@@ -7,7 +7,7 @@ REVERSE = 1
 OFF = 0
 ON = 1
 
-debug = 0
+debug = 1
 
 ser = None
 
