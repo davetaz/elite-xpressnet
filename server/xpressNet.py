@@ -146,18 +146,25 @@ class XpressNet:
             logging.debug(f"Sending {len(buffer)}: {self.__hex(buffer)}")
         self.serial_port.write(buffer)
 
-    def __read(self, length):
+    def __read(self, length, retries=3, retry_delay=1):
         """
-        Read a specified number of bytes from the serial port.
+        Read a specified number of bytes from the serial port with retries.
         :param length: Number of bytes to read
+        :param retries: Number of times to retry if the read fails
+        :param retry_delay: Delay in seconds between retries
         :return: Bytearray of received data
         """
-        data = self.serial_port.read(length)
-        if len(data) != length:
-            raise XpressNetException(f"Expected {length} bytes, got {len(data)}")
-        if self.debug_line:
-            logging.debug(f"Received {len(data)}: {self.__hex(data)}")
-        return data
+        for attempt in range(retries):
+            data = self.serial_port.read(length)
+            if len(data) == length:
+                if self.debug_line:
+                    logging.debug(f"Received {len(data)}: {self.__hex(data)}")
+                return data
+            else:
+                logging.warning(f"Expected {length} bytes, got {len(data)} on attempt {attempt + 1}")
+                time.sleep(retry_delay)
+
+        raise XpressNetException(f"Expected {length} bytes, got {len(data)} after {retries} attempts")
 
     def __get_status(self, cmd, is_broadcast, code, length, data):
         # response is a regular message
