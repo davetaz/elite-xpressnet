@@ -24,6 +24,7 @@ The application program running on the RPi should now be able to communicate wit
 Before python can communicate with the serial port you need to install the python serial package e.g. :
 
 `sudo apt-get install python-serial`
+`sudo apt-get install python3-serial`
 
 ## Examples
 
